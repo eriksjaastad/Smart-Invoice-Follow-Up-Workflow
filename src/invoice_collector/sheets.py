@@ -3,6 +3,7 @@ Google Sheets client for reading and writing invoice data
 """
 import os
 import time
+import logging
 from datetime import datetime
 from typing import List, Optional
 import pandas as pd
@@ -14,6 +15,8 @@ from googleapiclient.errors import HttpError
 
 from .models import Invoice
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 # Scopes for Google Sheets API (read and write)
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -48,13 +51,13 @@ def _get_sheets_service():
     return build("sheets", "v4", credentials=creds)
 
 
-def _retry_api_call(api_call_func, max_retries: int = 4):
+def _retry_api_call(api_call_func, max_retries: int = None):
     """
     Retry API calls with exponential backoff for rate limiting
 
     Args:
         api_call_func: Function to call (should be a lambda or callable)
-        max_retries: Maximum number of retry attempts
+        max_retries: Maximum number of retry attempts (defaults to settings.MAX_RETRIES)
 
     Returns:
         Result of the API call
@@ -62,14 +65,17 @@ def _retry_api_call(api_call_func, max_retries: int = 4):
     Raises:
         Exception if max retries exceeded or non-rate-limit error
     """
+    if max_retries is None:
+        max_retries = settings.MAX_RETRIES
+
     for attempt in range(max_retries + 1):
         try:
             return api_call_func()
         except HttpError as e:
             # Check if it's a rate limit error (429)
             if e.resp.status == 429 and attempt < max_retries:
-                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s, 8s
-                print(f"Rate limit hit on Sheets API, waiting {wait_time}s before retry (attempt {attempt + 1}/{max_retries})...")
+                wait_time = settings.RETRY_INITIAL_WAIT * (2 ** attempt)  # Exponential backoff
+                logger.warning(f"⚠️  Rate limit hit on Sheets API, waiting {wait_time}s before retry (attempt {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)
                 continue
             else:
@@ -155,10 +161,10 @@ def read_invoices() -> List[Invoice]:
             try:
                 # Validate required date fields
                 if pd.isna(row["due_date"]):
-                    print(f"Warning: Skipping row {idx + 2}: Missing required field 'due_date'")
+                    logger.warning(f"⚠️  Skipping row {idx + 2}: Missing required field 'due_date'")
                     continue
                 if pd.isna(row["sent_date"]):
-                    print(f"Warning: Skipping row {idx + 2}: Missing required field 'sent_date'")
+                    logger.warning(f"⚠️  Skipping row {idx + 2}: Missing required field 'sent_date'")
                     continue
 
                 invoice = Invoice(
@@ -181,7 +187,7 @@ def read_invoices() -> List[Invoice]:
                 invoices.append(invoice)
             except (ValueError, TypeError, AttributeError) as e:
                 # Skip invalid rows but log the error
-                print(f"Warning: Skipping row {idx + 2}: {e}")
+                logger.error(f"❌ Skipping row {idx + 2}: {e}")
                 continue
 
         return invoices
@@ -252,7 +258,7 @@ def write_back_invoices(invoice_updates: List[tuple[str, int, str]]) -> int:
                     break
 
             if not invoice_found:
-                print(f"Warning: Could not find invoice {invoice_id} in spreadsheet for write-back")
+                logger.error(f"❌ Could not find invoice {invoice_id} in spreadsheet for write-back")
 
         if not updates:
             return 0

@@ -9,7 +9,8 @@ Coordinates the entire workflow:
 """
 import logging
 from datetime import date
-from typing import List
+from typing import List, Dict
+from dataclasses import dataclass
 from tabulate import tabulate
 
 from .config import settings
@@ -17,6 +18,15 @@ from .models import Invoice, DraftCreated
 from .sheets import read_invoices, write_back_invoices
 from .router import days_overdue, stage_for, should_send
 from .emailer import create_draft_from_template, template_path_for, render_template
+
+
+@dataclass
+class ProcessingError:
+    """Represents an error that occurred during processing"""
+    invoice_id: str
+    client_name: str
+    error_message: str
+    error_type: str  # 'skip', 'draft_failed', 'write_back_failed'
 
 # Set up logging
 logging.basicConfig(
@@ -26,7 +36,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def run_daily() -> List[DraftCreated]:
+def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
     """
     Main daily job that processes all overdue invoices
 
@@ -42,7 +52,7 @@ def run_daily() -> List[DraftCreated]:
     4. Write back last_stage_sent and last_sent_at to Google Sheets
 
     Returns:
-        List of DraftCreated objects representing drafts that were created
+        Tuple of (drafts_created, errors_encountered)
     """
     today = date.today()
     logger.info(f"Starting daily invoice collection run for {today}")
@@ -75,11 +85,12 @@ def run_daily() -> List[DraftCreated]:
 
     if not overdue_invoices:
         logger.info("No overdue invoices to process")
-        return []
+        return [], []
 
     # Process each invoice
     drafts_created = []
     updates_to_write = []
+    errors = []
 
     for invoice in overdue_invoices:
         try:
@@ -149,7 +160,14 @@ def run_daily() -> List[DraftCreated]:
             )
 
         except Exception as e:
-            logger.error(f"Error processing invoice {invoice.invoice_id}: {e}")
+            error_msg = str(e)
+            logger.error(f"❌ Error processing invoice {invoice.invoice_id}: {error_msg}")
+            errors.append(ProcessingError(
+                invoice_id=invoice.invoice_id,
+                client_name=invoice.client_name,
+                error_message=error_msg,
+                error_type='draft_failed'
+            ))
             continue
 
     # Write back to Google Sheets
@@ -161,44 +179,71 @@ def run_daily() -> List[DraftCreated]:
             logger.error(f"Failed to write back to Google Sheets: {e}")
             # Don't raise - drafts were already created
 
-    logger.info(f"Daily run complete. Created {len(drafts_created)} draft(s).")
-    return drafts_created
+    logger.info(f"Daily run complete. Created {len(drafts_created)} draft(s), {len(errors)} error(s).")
+    return drafts_created, errors
 
 
-def print_summary(drafts: List[DraftCreated]):
+def print_summary(drafts: List[DraftCreated], errors: List[ProcessingError] = None):
     """
-    Print a nice summary table of created drafts
+    Print a nice summary table of created drafts and any errors
 
     Args:
         drafts: List of DraftCreated objects
+        errors: List of ProcessingError objects (optional)
     """
-    if not drafts:
+    if errors is None:
+        errors = []
+
+    # Print drafts summary
+    if not drafts and not errors:
         print("\n✅ No drafts created - all invoices up to date!\n")
         return
 
-    # Prepare table data
-    table_data = []
-    for draft in drafts:
-        table_data.append([
-            draft.invoice_id,
-            f"Day {draft.stage}",
-            draft.client_name,
-            draft.client_email,
-            f"${draft.amount:,.2f} {draft.currency}",
-            f"{draft.days_overdue}d overdue",
-        ])
+    if drafts:
+        # Prepare table data
+        table_data = []
+        for draft in drafts:
+            table_data.append([
+                draft.invoice_id,
+                f"Day {draft.stage}",
+                draft.client_name,
+                draft.client_email,
+                f"${draft.amount:,.2f} {draft.currency}",
+                f"{draft.days_overdue}d overdue",
+            ])
 
-    # Print table
-    headers = ["Invoice ID", "Stage", "Client", "Email", "Amount", "Days Overdue"]
-    print("\n" + "="*80)
-    print(f"📧 Created {len(drafts)} Gmail Draft(s)")
-    print("="*80)
-    print(tabulate(table_data, headers=headers, tablefmt="simple"))
-    print("="*80)
+        # Print table
+        headers = ["Invoice ID", "Stage", "Client", "Email", "Amount", "Days Overdue"]
+        print("\n" + "="*80)
+        print(f"📧 Created {len(drafts)} Gmail Draft(s)")
+        print("="*80)
+        print(tabulate(table_data, headers=headers, tablefmt="simple"))
+        print("="*80)
 
-    if settings.DRY_RUN:
-        print("\n⚠️  DRY RUN MODE - No actual drafts were created")
-        print("   Set DRY_RUN=false in .env to create real drafts\n")
-    else:
-        print("\n✅ Drafts created in Gmail - review and send them!")
-        print("   Open Gmail → Drafts to review and send\n")
+    # Print errors summary
+    if errors:
+        error_table = []
+        for error in errors:
+            error_table.append([
+                error.invoice_id,
+                error.client_name,
+                error.error_type,
+                error.error_message[:60] + "..." if len(error.error_message) > 60 else error.error_message
+            ])
+
+        print("\n" + "="*80)
+        print(f"❌ {len(errors)} ERROR(S) OCCURRED")
+        print("="*80)
+        print(tabulate(error_table, headers=["Invoice ID", "Client", "Error Type", "Message"], tablefmt="simple"))
+        print("="*80)
+        print("\n⚠️  ATTENTION REQUIRED: Some invoices failed to process")
+        print("   Check the errors above and resolve the issues\n")
+
+    # Mode indicator
+    if drafts:
+        if settings.DRY_RUN:
+            print("\n⚠️  DRY RUN MODE - No actual drafts were created")
+            print("   Set DRY_RUN=false in .env to create real drafts\n")
+        else:
+            print("\n✅ Drafts created in Gmail - review and send them!")
+            print("   Open Gmail → Drafts to review and send\n")

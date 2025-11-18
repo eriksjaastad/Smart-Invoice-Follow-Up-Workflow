@@ -44,6 +44,10 @@ class Settings:
     # Reminder Stages (days overdue)
     STAGES = [7, 14, 21, 28, 35, 42]
 
+    # API Retry Configuration
+    MAX_RETRIES: int = int(os.getenv("MAX_API_RETRIES", "4"))
+    RETRY_INITIAL_WAIT: int = int(os.getenv("RETRY_INITIAL_WAIT_SECONDS", "1"))
+
     @classmethod
     def validate(cls) -> list[str]:
         """
