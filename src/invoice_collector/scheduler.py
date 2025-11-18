@@ -9,8 +9,9 @@ Coordinates the entire workflow:
 """
 import logging
 from datetime import date
-from typing import List, Dict
+from typing import List
 from dataclasses import dataclass
+from enum import Enum
 from tabulate import tabulate
 
 from .config import settings
@@ -20,13 +21,21 @@ from .router import days_overdue, stage_for, should_send
 from .emailer import create_draft_from_template, template_path_for, render_template
 
 
+class ErrorType(Enum):
+    """Types of errors that can occur during processing"""
+    SKIP_INVALID_DATA = "skip_invalid_data"
+    DRAFT_FAILED = "draft_failed"
+    WRITE_BACK_FAILED = "write_back_failed"
+    READ_FAILED = "read_failed"
+
+
 @dataclass
 class ProcessingError:
     """Represents an error that occurred during processing"""
     invoice_id: str
     client_name: str
     error_message: str
-    error_type: str  # 'skip', 'draft_failed', 'write_back_failed'
+    error_type: ErrorType
 
 # Set up logging
 logging.basicConfig(
@@ -166,7 +175,7 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
                 invoice_id=invoice.invoice_id,
                 client_name=invoice.client_name,
                 error_message=error_msg,
-                error_type='draft_failed'
+                error_type=ErrorType.DRAFT_FAILED
             ))
             continue
 
@@ -176,7 +185,22 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
             rows_updated = write_back_invoices(updates_to_write)
             logger.info(f"Updated {rows_updated} rows in Google Sheets")
         except Exception as e:
-            logger.error(f"Failed to write back to Google Sheets: {e}")
+            error_msg = str(e)
+            logger.error(f"❌ Failed to write back to Google Sheets: {error_msg}")
+            # Add write-back errors for all affected invoices
+            for invoice_id, stage, sent_date in updates_to_write:
+                # Find the client name from drafts_created
+                client_name = "Unknown"
+                for draft in drafts_created:
+                    if draft.invoice_id == invoice_id:
+                        client_name = draft.client_name
+                        break
+                errors.append(ProcessingError(
+                    invoice_id=invoice_id,
+                    client_name=client_name,
+                    error_message=f"Failed to update tracking: {error_msg}",
+                    error_type=ErrorType.WRITE_BACK_FAILED
+                ))
             # Don't raise - drafts were already created
 
     logger.info(f"Daily run complete. Created {len(drafts_created)} draft(s), {len(errors)} error(s).")
@@ -227,7 +251,7 @@ def print_summary(drafts: List[DraftCreated], errors: List[ProcessingError] = No
             error_table.append([
                 error.invoice_id,
                 error.client_name,
-                error.error_type,
+                error.error_type.value,  # Get string value from enum
                 error.error_message[:60] + "..." if len(error.error_message) > 60 else error.error_message
             ])
 
