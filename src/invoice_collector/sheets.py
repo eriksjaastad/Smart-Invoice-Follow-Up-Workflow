@@ -2,6 +2,7 @@
 Google Sheets client for reading and writing invoice data
 """
 import os
+import time
 from datetime import datetime
 from typing import List, Optional
 import pandas as pd
@@ -47,6 +48,34 @@ def _get_sheets_service():
     return build("sheets", "v4", credentials=creds)
 
 
+def _retry_api_call(api_call_func, max_retries: int = 4):
+    """
+    Retry API calls with exponential backoff for rate limiting
+
+    Args:
+        api_call_func: Function to call (should be a lambda or callable)
+        max_retries: Maximum number of retry attempts
+
+    Returns:
+        Result of the API call
+
+    Raises:
+        Exception if max retries exceeded or non-rate-limit error
+    """
+    for attempt in range(max_retries + 1):
+        try:
+            return api_call_func()
+        except HttpError as e:
+            # Check if it's a rate limit error (429)
+            if e.resp.status == 429 and attempt < max_retries:
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s, 8s
+                print(f"Rate limit hit on Sheets API, waiting {wait_time}s before retry (attempt {attempt + 1}/{max_retries})...")
+                time.sleep(wait_time)
+                continue
+            else:
+                raise
+
+
 def read_invoices() -> List[Invoice]:
     """
     Read invoices from Google Sheets
@@ -69,8 +98,10 @@ def read_invoices() -> List[Invoice]:
     """
     try:
         service = _get_sheets_service()
-        result = (
-            service.spreadsheets()
+
+        # Use retry logic for API call
+        result = _retry_api_call(
+            lambda: service.spreadsheets()
             .values()
             .get(spreadsheetId=settings.SPREADSHEET_ID, range=settings.RANGE)
             .execute()
@@ -122,14 +153,22 @@ def read_invoices() -> List[Invoice]:
         invoices = []
         for idx, row in df.iterrows():
             try:
+                # Validate required date fields
+                if pd.isna(row["due_date"]):
+                    print(f"Warning: Skipping row {idx + 2}: Missing required field 'due_date'")
+                    continue
+                if pd.isna(row["sent_date"]):
+                    print(f"Warning: Skipping row {idx + 2}: Missing required field 'sent_date'")
+                    continue
+
                 invoice = Invoice(
                     invoice_id=str(row.get("invoice_id", "")).strip(),
                     client_name=str(row.get("client_name", "")).strip(),
                     client_email=str(row.get("client_email", "")).strip(),
                     amount=float(row.get("amount", 0.0)),
                     currency=str(row.get("currency", "USD")).strip(),
-                    due_date=row["due_date"].date() if pd.notna(row["due_date"]) else None,
-                    sent_date=row["sent_date"].date() if pd.notna(row["sent_date"]) else None,
+                    due_date=row["due_date"].date(),  # Required - validated above
+                    sent_date=row["sent_date"].date(),  # Required - validated above
                     status=str(row.get("status", "")).strip(),
                     notes=str(row.get("notes", "")) if pd.notna(row.get("notes")) else "",
                     last_stage_sent=int(row["last_stage_sent"])
@@ -140,7 +179,7 @@ def read_invoices() -> List[Invoice]:
                     else None,
                 )
                 invoices.append(invoice)
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 # Skip invalid rows but log the error
                 print(f"Warning: Skipping row {idx + 2}: {e}")
                 continue
@@ -191,8 +230,11 @@ def write_back_invoices(invoice_updates: List[tuple[str, int, str]]) -> int:
 
         # Build updates
         updates = []
+        found_invoices = set()
+
         for invoice_id, stage, sent_date in invoice_updates:
             # Find the row for this invoice
+            invoice_found = False
             for row_idx, row in enumerate(values[1:], start=2):  # Start at row 2 (after header)
                 if len(row) > invoice_id_col and row[invoice_id_col] == invoice_id:
                     # Convert column index to letter
@@ -205,18 +247,25 @@ def write_back_invoices(invoice_updates: List[tuple[str, int, str]]) -> int:
                     updates.append(
                         {"range": date_cell, "values": [[sent_date]]}
                     )
+                    found_invoices.add(invoice_id)
+                    invoice_found = True
                     break
+
+            if not invoice_found:
+                print(f"Warning: Could not find invoice {invoice_id} in spreadsheet for write-back")
 
         if not updates:
             return 0
 
-        # Batch update
+        # Batch update with retry logic
         body = {"valueInputOption": "USER_ENTERED", "data": updates}
-        service.spreadsheets().values().batchUpdate(
-            spreadsheetId=settings.SPREADSHEET_ID, body=body
-        ).execute()
+        _retry_api_call(
+            lambda: service.spreadsheets().values().batchUpdate(
+                spreadsheetId=settings.SPREADSHEET_ID, body=body
+            ).execute()
+        )
 
-        return len(invoice_updates)
+        return len(found_invoices)  # Return number of successfully updated invoices
 
     except HttpError as e:
         raise Exception(f"Error writing to Google Sheets: {e}")

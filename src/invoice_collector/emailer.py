@@ -4,6 +4,7 @@ Handles template rendering and draft creation via Gmail API
 """
 import base64
 import re
+import time
 from email.mime.text import MIMEText
 from pathlib import Path
 from string import Template
@@ -97,38 +98,48 @@ def template_path_for(stage: int) -> Path:
     return settings.TEMPLATES_DIR / f"stage_{stage:02d}.txt"
 
 
-def create_draft(to_email: str, subject: str, body: str) -> dict:
+def create_draft(to_email: str, subject: str, body: str, max_retries: int = 4) -> dict:
     """
     Create a Gmail draft (does NOT send the email)
+    Includes exponential backoff for rate limiting (429 errors)
 
     Args:
         to_email: Recipient email address
         subject: Email subject line
         body: Email body text
+        max_retries: Maximum number of retry attempts for rate limit errors
 
     Returns:
         Draft creation response from Gmail API
     """
-    try:
-        service = _get_gmail_service()
+    service = _get_gmail_service()
 
-        # Create the email message
-        message = MIMEText(body, "plain", "utf-8")
-        message["To"] = to_email
-        message["From"] = settings.GMAIL_SENDER
-        message["Subject"] = subject
+    # Create the email message
+    message = MIMEText(body, "plain", "utf-8")
+    message["To"] = to_email
+    message["From"] = settings.GMAIL_SENDER
+    message["Subject"] = subject
 
-        # Encode the message
-        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+    # Encode the message
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+    draft_body = {"message": {"raw": raw_message}}
 
-        # Create draft
-        draft_body = {"message": {"raw": raw_message}}
-        draft = service.users().drafts().create(userId="me", body=draft_body).execute()
+    # Retry with exponential backoff for rate limiting
+    for attempt in range(max_retries + 1):
+        try:
+            draft = service.users().drafts().create(userId="me", body=draft_body).execute()
+            return draft
 
-        return draft
-
-    except HttpError as e:
-        raise Exception(f"Error creating Gmail draft: {e}")
+        except HttpError as e:
+            # Check if it's a rate limit error (429)
+            if e.resp.status == 429 and attempt < max_retries:
+                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s, 8s
+                print(f"Rate limit hit, waiting {wait_time}s before retry (attempt {attempt + 1}/{max_retries})...")
+                time.sleep(wait_time)
+                continue
+            else:
+                # Non-rate-limit error or max retries exceeded
+                raise Exception(f"Error creating Gmail draft: {e}")
 
 
 def create_draft_from_template(
