@@ -1,0 +1,11 @@
+Subject: Action needed — invoice {{invoice_id}}
+
+Hi {{name}},
+
+We're now 4 weeks past the due date for invoice {{invoice_id}} ({{amount}} {{currency}}, due {{due_date}}).
+
+I need to hear from you today regarding payment status. If there are any concerns or issues, I'd be happy to schedule a brief call to discuss and find a resolution.
+
+Please respond at your earliest convenience.
+
+Best regards

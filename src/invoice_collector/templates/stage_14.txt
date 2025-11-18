@@ -1,0 +1,11 @@
+Subject: Quick follow-up on invoice {{invoice_id}}
+
+Hi {{name}},
+
+I wanted to circle back on invoice {{invoice_id}} for {{amount}} {{currency}}, which was due {{due_date}}.
+
+Could you please confirm receipt of the invoice or share an expected timeline for payment? If there's anything blocking payment on your end, I'm happy to discuss.
+
+Looking forward to hearing from you.
+
+Best regards
