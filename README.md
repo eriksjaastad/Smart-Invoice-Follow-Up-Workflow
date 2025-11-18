@@ -13,9 +13,17 @@ This project contains documentation and templates for building an automatic invo
 
 ## Contents
 
-- **`Automatic_Invoice_Collection_System_From_Scratch.md`** - Complete Python implementation guide for building a self-hosted system from scratch
-- **`email_autoresponder.json`** - Make.com blueprint template for quick setup
-- **`.gitignore`** - Git ignore rules (excludes sensitive workflow document)
+### Documentation
+- **`QUICK_START.md`** - Get running in under 10 minutes
+- **`SETUP.md`** - Complete setup and deployment guide
+- **`GOOGLE_SHEET_TEMPLATE.md`** - Invoice tracking sheet template and instructions
+- **`Automatic_Invoice_Collection_System_From_Scratch.md`** - Detailed implementation guide
+
+### Implementation
+- **`src/invoice_collector/`** - Complete Python implementation (self-hosted)
+- **`email_autoresponder.json`** - Make.com blueprint template (cloud alternative)
+- **`main.py`** - Main entry point for the Python system
+- **`tests/`** - Unit tests for core logic
 
 ## System Architecture
 
@@ -30,18 +38,36 @@ The system uses a 6-stage escalation sequence over 42 days:
 
 ## Implementation Options
 
-### Option 1: Make.com (Quick Setup)
+### Option 1: Python (Self-Hosted) ⭐ **Complete Implementation Included**
+
+**Quick Start:**
+```bash
+pip install -r requirements.txt
+cp .env.example .env
+# Configure .env with your Google Sheets ID
+python main.py --dry-run
+```
+
+**Features:**
+- ✅ Complete working implementation included in `src/`
+- ✅ Google Sheets API integration
+- ✅ Gmail API for draft creation (no auto-send)
+- ✅ 6-stage escalation templates
+- ✅ Automatic tracking of last reminder sent
+- ✅ Full control over deployment and data
+- ✅ Unit tests included
+- ✅ Docker support
+
+**See:** [`QUICK_START.md`](QUICK_START.md) or [`SETUP.md`](SETUP.md)
+
+### Option 2: Make.com (Cloud Automation)
+
 Use the included `email_autoresponder.json` blueprint:
 1. Import into Make.com
 2. Connect Google Sheets and Gmail
 3. Configure your invoice tracking sheet
 
-### Option 2: Python (Self-Hosted)
-Follow the detailed guide in `Automatic_Invoice_Collection_System_From_Scratch.md` to build a custom Python solution with:
-- Google Sheets API integration
-- Gmail API for draft creation
-- Customizable templates and routing logic
-- Full control over deployment and data
+**Good for:** Non-technical users, quick setup, no server management
 
 ## Key Features
 
@@ -61,9 +87,73 @@ For a consulting firm with $47,000 in outstanding invoices:
 
 ## Requirements
 
+**For Python Implementation:**
+- Python 3.11 or higher
+- Google Cloud project (free)
 - Google Sheets with invoice tracking
 - Gmail account
-- Make.com account (for blueprint) OR Python 3.11+ (for self-hosted)
+
+**For Make.com Blueprint:**
+- Make.com account
+- Google Sheets with invoice tracking
+- Gmail account
+
+## Quick Links
+
+- 🚀 [Quick Start (10 minutes)](QUICK_START.md)
+- 📖 [Complete Setup Guide](SETUP.md)
+- 📊 [Google Sheets Template](GOOGLE_SHEET_TEMPLATE.md)
+- 🔧 [Implementation Details](Automatic_Invoice_Collection_System_From_Scratch.md)
+
+## Project Structure
+
+```
+Smart-Invoice-Follow-Up-Workflow/
+├── src/invoice_collector/       # Core Python implementation
+│   ├── models.py                # Invoice data models
+│   ├── config.py                # Configuration management
+│   ├── sheets.py                # Google Sheets integration
+│   ├── router.py                # Routing logic (days → stage)
+│   ├── emailer.py               # Gmail draft creation
+│   ├── scheduler.py             # Main orchestrator
+│   └── templates/               # 6 escalation email templates
+├── tests/                       # Unit tests
+├── main.py                      # Entry point
+├── requirements.txt             # Python dependencies
+├── .env.example                 # Configuration template
+├── Dockerfile                   # Docker deployment
+├── QUICK_START.md              # 10-minute setup guide
+├── SETUP.md                    # Detailed setup guide
+└── GOOGLE_SHEET_TEMPLATE.md    # Spreadsheet template
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# Install dev dependencies
+pip install -r requirements.txt
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=src/invoice_collector
+
+# Run specific tests
+pytest tests/test_router.py -v
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/ tests/
+
+# Lint
+ruff check src/ tests/
+```
 
 ## License
 

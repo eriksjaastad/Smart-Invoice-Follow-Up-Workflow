@@ -1,0 +1,11 @@
+Subject: Past due: invoice {{invoice_id}}
+
+Hi {{name}},
+
+This is a friendly reminder that invoice {{invoice_id}} for {{amount}} {{currency}} is now past due (originally due {{due_date}}).
+
+Please let me know the status of this payment today. If there's an issue preventing payment, I'd appreciate the opportunity to resolve it with you.
+
+I'm here to help if you need anything.
+
+Best regards
