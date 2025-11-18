@@ -1,0 +1,11 @@
+Subject: Friendly check-in on invoice {{invoice_id}}
+
+Hi {{name}},
+
+Hope you're doing well! I wanted to reach out with a quick check-in on invoice {{invoice_id}} for {{amount}} {{currency}}, which was due on {{due_date}}.
+
+If you've already processed this payment, please disregard this message. If you need a copy of the invoice or have any questions, just reply to this email and I'll be happy to help.
+
+Thanks so much!
+
+Best regards

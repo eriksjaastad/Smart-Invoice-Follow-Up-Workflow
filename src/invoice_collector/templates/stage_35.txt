@@ -1,0 +1,11 @@
+Subject: Final reminder before escalation — invoice {{invoice_id}}
+
+{{name}},
+
+We've reached 5 weeks past due on invoice {{invoice_id}} for {{amount}} {{currency}} (due {{due_date}}).
+
+Unfortunately, unless we receive payment or hear back from you today, we will need to begin our escalation procedures as outlined in our service agreement.
+
+I sincerely hope we can resolve this before that becomes necessary. Please reply immediately.
+
+Regards

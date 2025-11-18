@@ -1,0 +1,11 @@
+Subject: Last notice — collections to follow (invoice {{invoice_id}})
+
+{{name}},
+
+This is the final notice regarding invoice {{invoice_id}} for {{amount}} {{currency}}, now 6 weeks overdue (due {{due_date}}).
+
+As we have not received payment or any response to our previous reminders, we will be forced to pursue collections and/or legal action per our service agreement unless payment is received within the next 48 hours.
+
+If you would like to avoid this outcome, please contact me immediately to arrange payment.
+
+Regards
