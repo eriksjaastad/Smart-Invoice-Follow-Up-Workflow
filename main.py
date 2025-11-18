@@ -79,13 +79,17 @@ Daily usage:
 
     try:
         # Run the daily job
-        drafts_created = run_daily()
+        drafts_created, errors = run_daily()
 
         # Print summary
         if not args.quiet:
-            print_summary(drafts_created)
+            print_summary(drafts_created, errors)
 
-        # Exit with appropriate code
+        # Exit with error code if there were failures
+        if errors:
+            logger.error(f"Completed with {len(errors)} error(s)")
+            sys.exit(1)
+
         sys.exit(0)
 
     except KeyboardInterrupt:

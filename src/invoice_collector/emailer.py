@@ -5,6 +5,7 @@ Handles template rendering and draft creation via Gmail API
 import base64
 import re
 import time
+import logging
 from email.mime.text import MIMEText
 from pathlib import Path
 from string import Template
@@ -17,6 +18,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 # Scopes for Gmail API (compose/drafts only, not send)
 SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]
@@ -98,7 +101,7 @@ def template_path_for(stage: int) -> Path:
     return settings.TEMPLATES_DIR / f"stage_{stage:02d}.txt"
 
 
-def create_draft(to_email: str, subject: str, body: str, max_retries: int = 4) -> dict:
+def create_draft(to_email: str, subject: str, body: str, max_retries: int = None) -> dict:
     """
     Create a Gmail draft (does NOT send the email)
     Includes exponential backoff for rate limiting (429 errors)
@@ -107,11 +110,14 @@ def create_draft(to_email: str, subject: str, body: str, max_retries: int = 4) -
         to_email: Recipient email address
         subject: Email subject line
         body: Email body text
-        max_retries: Maximum number of retry attempts for rate limit errors
+        max_retries: Maximum number of retry attempts (defaults to settings.MAX_RETRIES)
 
     Returns:
         Draft creation response from Gmail API
     """
+    if max_retries is None:
+        max_retries = settings.MAX_RETRIES
+
     service = _get_gmail_service()
 
     # Create the email message
@@ -133,8 +139,8 @@ def create_draft(to_email: str, subject: str, body: str, max_retries: int = 4) -
         except HttpError as e:
             # Check if it's a rate limit error (429)
             if e.resp.status == 429 and attempt < max_retries:
-                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s, 8s
-                print(f"Rate limit hit, waiting {wait_time}s before retry (attempt {attempt + 1}/{max_retries})...")
+                wait_time = settings.RETRY_INITIAL_WAIT * (2 ** attempt)  # Exponential backoff
+                logger.warning(f"⚠️  Rate limit hit on Gmail API, waiting {wait_time}s before retry (attempt {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)
                 continue
             else:
