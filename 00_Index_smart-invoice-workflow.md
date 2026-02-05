@@ -111,7 +111,6 @@ scaffolding_date: 2026-01-27
 | [Documents/reference/LOCAL_MODEL_LEARNINGS.md](Documents/reference/LOCAL_MODEL_LEARNINGS.md) | Local Model Learnings |
 | [Documents/reference/SALES_STRATEGY.md](Documents/reference/SALES_STRATEGY.md) | Sales Strategy Guide for Invoice Collection System |
 | [README.md](README.md) | Smart Invoice Workflow |
-| [TODO.md](TODO.md) | This document tracks the tasks, priorities, and overall status of the smart-invoice-workflow project... |
 | [email_autoresponder.json](email_autoresponder.json) | No description available. |
 | [main.py](main.py) | No description available. |
 | [pyproject.toml](pyproject.toml) | No description available. |
