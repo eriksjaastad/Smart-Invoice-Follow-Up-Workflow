@@ -162,3 +162,9 @@ If you have existing invoices in QuickBooks, Stripe, or another system:
 4. Get the spreadsheet ID
 5. Configure your `.env` file
 6. Run the system!
+
+## Related Documentation
+
+- [[billing_workflows]] - billing/payments
+- [[sales_strategy]] - sales/business
+- [Safety Systems](patterns/safety-systems.md) - security

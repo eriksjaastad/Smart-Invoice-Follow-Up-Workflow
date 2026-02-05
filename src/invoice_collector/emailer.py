@@ -81,9 +81,16 @@ def render_template(template_path: Path, context: dict) -> Tuple[str, str]:
     subject_template = match.group(1)
     body_template = match.group(2)
 
-    # Render using Python's string.Template (safe substitution)
-    subject = Template(subject_template).safe_substitute(context)
-    body = Template(body_template).safe_substitute(context)
+    # Render using simple {{variable}} substitution (compatible with template files)
+    def substitute_variables(text: str, context: dict) -> str:
+        """Simple template substitution for {{variable}} syntax"""
+        result = text
+        for key, value in context.items():
+            result = result.replace(f"{{{{{key}}}}}", str(value))
+        return result
+
+    subject = substitute_variables(subject_template, context)
+    body = substitute_variables(body_template, context)
 
     return subject, body
 
