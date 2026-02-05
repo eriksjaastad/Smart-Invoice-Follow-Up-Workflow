@@ -2,7 +2,7 @@
 
 **For people who hate sales but need to make money**
 
-This document contains everything you need to sell the Smart Invoice Follow-Up Workflow system. I'll do 90% of the work - you just have to send the emails and show up.
+This document contains everything you need to sell the smart-invoice-workflow system. I'll do 90% of the work - you just have to send the emails and show up.
 
 ---
 
@@ -17,6 +17,22 @@ This document contains everything you need to sell the Smart Invoice Follow-Up W
 7. [Case Study Template](#case-study-template)
 8. [Landing Page Copy](#landing-page-copy)
 9. [The Simple Sales Process](#the-simple-sales-process)
+
+---
+
+## Quick Start: If You Only Do 3 Things
+
+If this whole doc feels like a lot, ignore 90% of it and just do this:
+
+1. **Pick one audience for the next 30 days**
+   - Example: “Marketing agencies doing $500k–$2M/year” or “Boutique consulting firms”
+2. **Send 4 personalized emails per weekday**
+   - Use the warm or cold templates below
+   - Personalize 1–2 lines so it doesn’t feel spammy
+3. **Book 15‑minute demos and follow the simple script**
+   - You’re not “closing hard” — you’re walking them through a clear before/after and then asking if they want it
+
+If you do that consistently for a month, you’ll have enough data (and usually a few sales) without needing to become “a sales person.”
 
 ---
 
@@ -407,7 +423,7 @@ That's $7,500 you can reinvest or use to cover expenses while waiting for paymen
 - Uncollected invoices: [X]% annually
 
 ## The Solution
-Implemented the Smart Invoice Follow-Up Workflow system:
+Implemented the smart-invoice-workflow system:
 - 6-stage automated email sequence
 - Google Sheets integration for tracking
 - Gmail draft creation (human oversight maintained)
@@ -445,7 +461,7 @@ A boutique management consulting firm was struggling with:
 - Uncollected invoices: 15-20% annually
 
 ## The Solution
-Implemented the Smart Invoice Follow-Up Workflow system:
+Implemented the smart-invoice-workflow system:
 - 6-stage automated email sequence (7, 14, 21, 28, 35, 42 days)
 - Google Sheets tracking integrated with existing workflow
 - Gmail draft creation with human review before sending
@@ -617,6 +633,37 @@ It's a numbers game. The more emails you send, the more money you make.
 
 ---
 
+## Tracking & Weekly Review (Keep It Stupid Simple)
+
+To keep this from feeling chaotic, use a **single Google Sheet** to track everything:
+
+**Columns:**
+- Date
+- Name
+- Company
+- Email / LinkedIn URL
+- Stage (`Contacted`, `Replied`, `Demo Booked`, `Won`, `Lost`)
+- Notes (1 short sentence max)
+
+**Daily (5–10 minutes):**
+- Add new people you emailed
+- Update stage for anyone who replied or booked
+
+**Every Friday (15–20 minutes):**
+- Count:
+  - How many emails you sent
+  - How many replies you got
+  - How many demos you booked
+  - How many yes/no decisions you got
+- Ask yourself:
+  - “What kind of person is saying yes?”
+  - “What kind of person is ignoring me?”
+  - “Which email felt easiest/natural to send?”
+
+Use those answers to slightly adjust **who** you target and **which email** you send next week. You’re not trying to be a perfect salesperson; you’re just running small experiments and doubling down on what feels easiest and works best.
+
+---
+
 ## Next Steps
 
 ### Your Action Plan
@@ -703,3 +750,12 @@ Create a folder called `sales-templates/` and save these:
 ---
 
 **Now go make some money.** 💰
+
+## Related Documentation
+
+- [Automation Reliability](patterns/automation-reliability.md) - automation
+- [[billing_workflows]] - billing/payments
+- [Cost Management](Documents/reference/MODEL_COST_COMPARISON.md) - cost management
+- [[portfolio_content]] - portfolio/career
+- [[sales_strategy]] - sales/business
+- [README](README) - Smart Invoice
