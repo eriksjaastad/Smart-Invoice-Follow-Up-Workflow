@@ -96,3 +96,11 @@ htmlcov/
 *.tmp
 *.bak
 .env.doppler-backup
+
+# Alembic
+backend/alembic/versions/*.pyc
+
+# Database
+*.db
+*.sqlite
+*.sqlite3

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing - Smart Invoice</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-gray-50" x-data="billing()">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-600">Smart Invoice</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard.html" class="text-gray-700 hover:text-blue-600">Dashboard</a>
+                    <a href="/settings.html" class="text-gray-700 hover:text-blue-600">Settings</a>
+                    <button @click="logout()" class="text-gray-700 hover:text-blue-600 font-medium">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Loading State -->
+        <div x-show="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading billing information...</p>
+        </div>
+
+        <!-- Billing Content -->
+        <div x-show="!loading">
+            <h2 class="text-3xl font-bold text-gray-900 mb-8">Billing & Subscription</h2>
+
+            <!-- Current Plan -->
+            <div class="bg-white rounded-lg shadow p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Current Plan</h3>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900" x-text="user.plan === 'paid' ? 'Pro Plan' : 'Free Plan'"></p>
+                        <p class="text-gray-600 mt-1" x-text="user.plan === 'paid' ? '$15/month - Up to 100 invoices' : '$0/month - Up to 3 invoices'"></p>
+                        <p x-show="user.plan === 'paid'" class="text-sm text-gray-500 mt-2">
+                            Status: <span class="font-medium" x-text="billingStatus.status || 'Active'"></span>
+                        </p>
+                    </div>
+                    <div>
+                        <span x-show="user.plan === 'paid'" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Active
+                        </span>
+                        <span x-show="user.plan === 'free'" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            Free
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade Section (Free Users) -->
+            <div x-show="user.plan === 'free'" class="mb-8">
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-8 text-white">
+                    <h3 class="text-2xl font-bold mb-4">Upgrade to Pro</h3>
+                    <p class="text-blue-100 mb-6">
+                        Unlock the full power of Smart Invoice and track up to 100 invoices with automated follow-ups.
+                    </p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold">100 Invoice Limit</p>
+                                <p class="text-sm text-blue-100">Track up to 100 invoices (vs 3 on free)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold">Weekly Digest Emails</p>
+                                <p class="text-sm text-blue-100">Get weekly summaries of your collections</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold">6-Stage Follow-Up</p>
+                                <p class="text-sm text-blue-100">Automated escalation at 7, 14, 21, 28, 35, 42 days</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <p class="font-semibold">Error Notifications</p>
+                                <p class="text-sm text-blue-100">Get alerted when issues occur</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-3xl font-bold">$15<span class="text-lg font-normal text-blue-100">/month</span></p>
+                            <p class="text-sm text-blue-100">Cancel anytime</p>
+                        </div>
+                        <button @click="upgradeToPro()" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                            Upgrade Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manage Subscription (Paid Users) -->
+            <div x-show="user.plan === 'paid'" class="bg-white rounded-lg shadow p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Manage Subscription</h3>
+                <p class="text-gray-600 mb-4">
+                    Manage your subscription, update payment method, or view billing history through the Stripe customer portal.
+                </p>
+                <button @click="openCustomerPortal()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Manage Billing
+                </button>
+            </div>
+
+            <!-- Billing History (Paid Users) -->
+            <div x-show="user.plan === 'paid'" class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Billing Information</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-gray-600">Subscription Status</span>
+                        <span class="font-medium text-gray-900" x-text="billingStatus.status || 'Active'"></span>
+                    </div>
+                    <div x-show="billingStatus.current_period_end" class="flex justify-between py-2 border-b border-gray-200">
+                        <span class="text-gray-600">Next Billing Date</span>
+                        <span class="font-medium text-gray-900" x-text="formatDate(billingStatus.current_period_end)"></span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-gray-600">Amount</span>
+                        <span class="font-medium text-gray-900">$15.00 / month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function billing() {
+            return {
+                user: {},
+                billingStatus: {},
+                loading: true,
+
+                async init() {
+                    await this.loadUser();
+                    if (this.user.plan === 'paid') {
+                        await this.loadBillingStatus();
+                    }
+                },
+
+                async loadUser() {
+                    try {
+                        const response = await fetch('/api/auth/me', {
+                            credentials: 'include'
+                        });
+                        
+                        if (response.ok) {
+                            this.user = await response.json();
+                        } else {
+                            window.location.href = '/login.html';
+                        }
+                    } catch (error) {
+                        console.error('Error loading user:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async loadBillingStatus() {
+                    try {
+                        const response = await fetch('/api/billing/status', {
+                            credentials: 'include'
+                        });
+                        
+                        if (response.ok) {
+                            this.billingStatus = await response.json();
+                        }
+                    } catch (error) {
+                        console.error('Error loading billing status:', error);
+                    }
+                },
+
+                async upgradeToPro() {
+                    try {
+                        const response = await fetch('/api/billing/create-checkout-session', {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Redirect to Stripe Checkout
+                            window.location.href = data.checkout_url;
+                        } else {
+                            alert('Failed to create checkout session. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error creating checkout session:', error);
+                        alert('An error occurred. Please try again.');
+                    }
+                },
+
+                async openCustomerPortal() {
+                    try {
+                        const response = await fetch('/api/billing/customer-portal', {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Redirect to Stripe Customer Portal
+                            window.location.href = data.portal_url;
+                        } else {
+                            alert('Failed to open customer portal. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error opening customer portal:', error);
+                        alert('An error occurred. Please try again.');
+                    }
+                },
+
+                formatDate(timestamp) {
+                    if (!timestamp) return 'N/A';
+                    const date = new Date(timestamp * 1000);
+                    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                },
+
+                logout() {
+                    window.location.href = '/api/auth/logout';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
