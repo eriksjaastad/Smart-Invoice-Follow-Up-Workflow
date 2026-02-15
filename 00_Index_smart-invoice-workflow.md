@@ -88,12 +88,17 @@ scaffolding_date: 2026-01-27
 | Directory | Files | Description |
 | :--- | :---: | :--- |
 | [Documents/](Documents/README.md) | 2 | *Auto-generated index. Last updated: 2026-01-24* |
+| [backend/](backend/) | 1 | No description available. |
+| [case-studies/](case-studies/) | 2 | No description available. |
+| [static/](static/) | 6 | No description available. |
 
 ### Files
 
 | File | Description |
 | :--- | :--- |
+| [2-14-2026_hard-rules.md](2-14-2026_hard-rules.md) | Got it — I’m **not** going to talk you out of it. You’ve got the right posture baked into the PRD: *... |
 | [AGENTS.md](AGENTS.md) | 🎯 Project Overview |
+| [AUDIT_2026-02-05.md](AUDIT_2026-02-05.md) | **Date:** 2026-02-05 |
 | [BUSINESS IDEA.md](BUSINESS IDEA.md) | Don't beat yourself up about the "Smart Invoice" workflow being on GitHub. Some of the biggest compa... |
 | [CLAUDE.md](CLAUDE.md) | AI Collaboration Instructions |
 | [DECISIONS.md](DECISIONS.md) | > *Documenting WHY we made decisions, not just WHAT we built.* |
@@ -110,10 +115,58 @@ scaffolding_date: 2026-01-27
 | [Documents/reference/GOOGLE_SHEET_TEMPLATE.md](Documents/reference/GOOGLE_SHEET_TEMPLATE.md) | Google Sheets Template for Invoice Tracking |
 | [Documents/reference/LOCAL_MODEL_LEARNINGS.md](Documents/reference/LOCAL_MODEL_LEARNINGS.md) | Local Model Learnings |
 | [Documents/reference/SALES_STRATEGY.md](Documents/reference/SALES_STRATEGY.md) | Sales Strategy Guide for Invoice Collection System |
+| [Gemini-ideas.md](Gemini-ideas.md) | import pandas as pd |
+| [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) | **Date:** 2026-02-14 |
+| [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) | **Scope reminder (MVP firewall):** Ship only what supports **sign up → connect Google → pick sheet →... |
+| [PRD.md](PRD.md) | **Version:** 1.0 |
 | [README.md](README.md) | Smart Invoice Workflow |
+| [RUNBOOK.md](RUNBOOK.md) | This runbook is for **operating SIW safely** during MVP: diagnosing failures, preventing runaway beh... |
+| [backend/alembic/env.py](backend/alembic/env.py) | Alembic environment configuration for async SQLAlchemy |
+| [backend/alembic/script.py.mako](backend/alembic/script.py.mako) | No description available. |
+| [backend/alembic/versions/001_initial_schema.py](backend/alembic/versions/001_initial_schema.py) | Initial schema: users and job_history tables |
+| [backend/alembic.ini](backend/alembic.ini) | No description available. |
+| [backend/app/__init__.py](backend/app/__init__.py) | Smart Invoice SaaS Backend Application |
+| [backend/app/api/__init__.py](backend/app/api/__init__.py) | API routes package. |
+| [backend/app/api/auth.py](backend/app/api/auth.py) | Authentication API routes for Auth0 integration. |
+| [backend/app/api/billing.py](backend/app/api/billing.py) | Billing API routes for Stripe integration. |
+| [backend/app/api/digest.py](backend/app/api/digest.py) | Digest API routes for weekly email summaries. |
+| [backend/app/api/notifications.py](backend/app/api/notifications.py) | Notification API routes for error notifications. |
+| [backend/app/api/onboarding.py](backend/app/api/onboarding.py) | Onboarding flow API routes. |
+| [backend/app/api/users.py](backend/app/api/users.py) | User management API routes. |
+| [backend/app/api/webhooks.py](backend/app/api/webhooks.py) | Webhook API routes for external integrations. |
+| [backend/app/core/__init__.py](backend/app/core/__init__.py) | Core configuration and utilities |
+| [backend/app/core/auth.py](backend/app/core/auth.py) | Auth0 authentication utilities. |
+| [backend/app/core/config.py](backend/app/core/config.py) | Application configuration using Pydantic Settings |
+| [backend/app/db/__init__.py](backend/app/db/__init__.py) | Database configuration and session management |
+| [backend/app/db/session.py](backend/app/db/session.py) | Database session and engine configuration |
+| [backend/app/main.py](backend/app/main.py) | FastAPI application entry point |
+| [backend/app/models/__init__.py](backend/app/models/__init__.py) | Database models package. |
+| [backend/app/models/job_history.py](backend/app/models/job_history.py) | Job history database model. |
+| [backend/app/models/user.py](backend/app/models/user.py) | User database model. |
+| [backend/app/schemas/__init__.py](backend/app/schemas/__init__.py) | Pydantic schemas package. |
+| [backend/app/schemas/digest.py](backend/app/schemas/digest.py) | Digest Pydantic schemas for weekly email digest functionality. |
+| [backend/app/schemas/invoice.py](backend/app/schemas/invoice.py) | Invoice Pydantic schemas for validation. |
+| [backend/app/schemas/job_history.py](backend/app/schemas/job_history.py) | Job history Pydantic schemas for request/response validation. |
+| [backend/app/schemas/notification.py](backend/app/schemas/notification.py) | Notification Pydantic schemas for error notifications. |
+| [backend/app/schemas/user.py](backend/app/schemas/user.py) | User Pydantic schemas for request/response validation. |
+| [backend/app/schemas/webhook.py](backend/app/schemas/webhook.py) | Webhook Pydantic schemas for Make.com integration. |
+| [backend/app/services/__init__.py](backend/app/services/__init__.py) | Business logic services package. |
+| [backend/app/services/digest.py](backend/app/services/digest.py) | Weekly digest email service. |
+| [backend/app/services/escalation.py](backend/app/services/escalation.py) | Escalation logic for invoice reminders. |
+| [backend/app/services/notifications.py](backend/app/services/notifications.py) | Error notification service. |
+| [case-studies/JP-Middleton.md](case-studies/JP-Middleton.md) | JP Middleton’s business, **StartGrowSell.ai** (and its operational arm **GymMembersNow**), is a stro... |
+| [case-studies/business-sources.md](case-studies/business-sources.md) | To get past the "influencer" noise and find out where real business-to-business (B2B) deals actually... |
 | [email_autoresponder.json](email_autoresponder.json) | No description available. |
+| [gemini-research-for-prd.md](gemini-research-for-prd.md) | Building a SaaS on Make.com requires a clean "headless" architecture where your backend treats scena... |
 | [main.py](main.py) | No description available. |
 | [pyproject.toml](pyproject.toml) | No description available. |
 | [requirements.txt](requirements.txt) | No description available. |
+| [static/billing.html](static/billing.html) | No description available. |
+| [static/dashboard.html](static/dashboard.html) | No description available. |
+| [static/index.html](static/index.html) | No description available. |
+| [static/login.html](static/login.html) | No description available. |
+| [static/onboarding.html](static/onboarding.html) | No description available. |
+| [static/settings.html](static/settings.html) | No description available. |
+| [uv.lock](uv.lock) | No description available. |
 
 <!-- LIBRARIAN-INDEX-END -->

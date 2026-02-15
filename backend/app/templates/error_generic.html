@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Collection Errors</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .alert {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert h2 {
+            margin-top: 0;
+            color: #856404;
+        }
+        h1 {
+            color: #d32f2f;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .error-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .steps {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .steps ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .steps li {
+            margin: 10px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .cta-button:hover {
+            background-color: #45a049;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ Action Required: Invoice Collection Errors</h1>
+        
+        <p>Hi {{ user_name }},</p>
+        
+        <div class="alert">
+            <h2>We've detected repeated errors</h2>
+            <p>Your invoice collection for <strong>{{ business_name }}</strong> has failed 3 times in a row.</p>
+        </div>
+        
+        <p><strong>What this means:</strong></p>
+        <p>Something is preventing us from processing your invoices. Your invoice collection is currently paused until this is resolved.</p>
+        
+        <div class="steps">
+            <h3>Common causes and solutions:</h3>
+            <ul>
+                <li><strong>Google Sheet issues</strong> - Check that your sheet exists and is accessible</li>
+                <li><strong>Connection problems</strong> - Try reconnecting your Google account</li>
+                <li><strong>Sheet format changes</strong> - Ensure all required columns are present</li>
+                <li><strong>Temporary service issues</strong> - Sometimes errors resolve themselves</li>
+            </ul>
+        </div>
+        
+        <a href="{{ frontend_url }}/settings" class="cta-button">Check Account Settings →</a>
+        
+        <p><strong>Need help?</strong> Reply to this email with details about your setup and we'll help you troubleshoot the issue.</p>
+        
+        {% if error_details %}
+        <details>
+            <summary style="cursor: pointer; color: #666; margin: 20px 0;">Technical error details (click to expand)</summary>
+            <div class="error-details">{{ error_details }}</div>
+        </details>
+        {% endif %}
+        
+        <div class="footer">
+            <p>Best regards,<br>
+            <strong>Smart Invoice Team</strong></p>
+            
+            <p style="font-size: 12px; color: #999;">
+                This is an automated error notification. Your invoice collection will resume once the issue is resolved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

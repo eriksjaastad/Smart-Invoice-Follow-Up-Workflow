@@ -29,8 +29,13 @@
 - **Current Model:** Claude or Gemini (as available)
 - **Tools:** Ollama MCP (`ollama_run`, `ollama_run_many`), Shell tool, File tools, Draft Gate.
 - **Constraint:** **STRICTLY PROHIBITED** from generating logic or writing code.
+- **Dispatch Protocol (MANDATORY):**
+  1. **FIRST:** Dispatch all coding tasks via Agent Hub: `$PROJECTS_ROOT/_tools/agent-hub/scripts/dispatch_task.py`
+  2. **IF Agent Hub fails** (timeout, model unavailable, error): Report the failure to the Conductor with the error details. Do NOT silently fall back to your own tools.
+  3. **ONLY with explicit Conductor approval:** Use your own sub-agents or built-in tools as a fallback mechanism.
+  4. **NEVER** write code yourself — not even one-liners, not even "simple" fixes. You do NOT have standing permission to use your own sub-agents for code generation.
 - **Mandate:**
-  1. **Relay:** Pass Super Manager prompts to Workers via MCP.
+  1. **Dispatch:** Send coding tasks to Workers via Agent Hub (see Dispatch Protocol above).
   2. **Execute File Ops:** Perform all file moves, copies, and shell commands as requested by the Conductor or as needed by the Worker's logic.
   3. **Context Bridge:** Provide necessary project context/files to Workers when requested.
   4. **Verify:** Inspect Worker output against the Checklist.
@@ -67,7 +72,7 @@
 
 1. **Drafting:** Super Manager writes a task prompt with **[ACCEPTANCE CRITERIA]** as a Markdown checklist
 2. **Handoff:** Super Manager passes the prompt to the Floor Manager
-3. **Relay & Context:** Floor Manager executes via Worker, providing context as needed
+3. **Dispatch:** Floor Manager dispatches to Worker via Agent Hub (`$PROJECTS_ROOT/_tools/agent-hub/scripts/dispatch_task.py`). NOT via own sub-agents.
 4. **Execution:** Worker generates the necessary code/logic changes. Floor Manager performs all file operations and command executions.
 5. **Inspection (The Guardrail):** Floor Manager must:
    - Read the modified/new files
@@ -78,7 +83,7 @@
    - **IF PASS:** Floor Manager issues official **"Floor Manager Sign-off"**
 7. **Finalization:** Task marked **Complete** only after Sign-off
 
-**CRITICAL RULE:** Only the **Workers** write code. Under no circumstances should the Super Manager or Floor Manager generate code snippets or implementation logic.
+**CRITICAL RULE:** Only the **Workers** write code. Under no circumstances should the Super Manager or Floor Manager generate code snippets or implementation logic. Floor Manager must use Agent Hub for dispatch — never its own sub-agents — unless the Conductor explicitly approves a fallback.
 
 ---
 

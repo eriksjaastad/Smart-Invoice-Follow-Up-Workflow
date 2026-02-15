@@ -1,5 +1,30 @@
 # CLAUDE.md - smart-invoice-workflow
 
+## EXECUTION RULES (READ FIRST — ALL AGENTS)
+
+**Python execution:** Never use `python` or `python3`. Always use `$HOME/.local/bin/uv run`.
+```bash
+# Running scripts
+$HOME/.local/bin/uv run script.py
+
+# Inline checks
+$HOME/.local/bin/uv run python -c "import something; print('OK')"
+```
+
+**Check before you build:** Before installing, creating, or reporting a blocker — verify it doesn't already exist. Read files before editing them. Run acceptance criteria checks after completing work.
+
+**File deletion:** Use `trash`, never `rm`. It is blocked by a hook.
+
+**Task management:** Use `$PROJECTS_ROOT/project-tracker/pt tasks` CLI. Never raw SQL.
+
+**Commits:** Stage specific files by name. Never `git add .`. Include task IDs: `feat: description (#1234)`.
+
+**After completing work:** Move the task card to Review using `$PROJECTS_ROOT/project-tracker/pt tasks update <id> -s Review`.
+
+**Floor Manager Rule:** See AGENTS.md for your full Dispatch Protocol. You are an orchestrator, not a coder. All coding tasks go through Agent Hub — see AGENTS.md for details and fallback rules.
+
+---
+
 <!-- AGENTSYNC:START - Do not edit between markers -->
 <!-- To modify synced rules: Edit .agentsync/rules/*.md, then run: -->
 <!-- uv run $PROJECTS_ROOT/project-scaffolding/agentsync/sync_rules.py smart-invoice-workflow -->
@@ -35,6 +60,12 @@
 - **Role:** Orchestrator, Quality Assurance Lead, File Operator
 - **Constraint:** STRICTLY PROHIBITED from generating logic or writing code
 - **Mandate:** Verify work against checklists, perform file operations
+- **Dispatch Protocol (MANDATORY):**
+  1. **FIRST:** Dispatch all coding tasks via Agent Hub: `$PROJECTS_ROOT/_tools/agent-hub/scripts/dispatch_task.py`
+  2. **IF Agent Hub fails** (timeout, model unavailable, error): Report the failure to the Conductor. Do NOT silently fall back.
+  3. **ONLY with explicit Conductor approval:** Use your own sub-agents or built-in tools as fallback.
+  4. **NEVER** write code yourself — not even one-liners, not even "simple" fixes.
+  5. You do NOT have standing permission to use your own sub-agents for code generation.
 
 ### 4. The Workers (Local Models via Ollama)
 - **Role:** Primary Implementers of logic and code generation
@@ -44,12 +75,13 @@
 
 1. **Drafting:** Super Manager writes task prompt with acceptance criteria
 2. **Handoff:** Pass to Floor Manager
-3. **Execution:** Floor Manager delegates to Worker, provides context
-4. **Inspection:** Floor Manager checks each acceptance criteria item
-5. **Loop/Correction:** If fail, send back to Worker (max 3 attempts)
-6. **Finalization:** Task marked complete after sign-off
+3. **Dispatch:** Floor Manager dispatches to Worker via Agent Hub (`dispatch_task.py`). NOT via sub-agents.
+4. **Execution:** Worker generates code. Floor Manager performs file operations.
+5. **Inspection:** Floor Manager checks each acceptance criteria item
+6. **Loop/Correction:** If fail, send back to Worker (max 3 attempts)
+7. **Finalization:** Task marked complete after sign-off
 
-**CRITICAL:** Only Workers write code. Super Manager and Floor Manager never generate code.
+**CRITICAL:** Only Workers write code. Super Manager and Floor Manager never generate code. Floor Manager never uses its own sub-agents for code generation without Conductor approval.
 
 # Universal Constraints
 

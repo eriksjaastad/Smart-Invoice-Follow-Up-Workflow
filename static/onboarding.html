@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup - Smart Invoice</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body class="bg-gray-50" x-data="onboarding()">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-600">Smart Invoice</h1>
+                </div>
+                <div>
+                    <button @click="logout()" class="text-gray-700 hover:text-blue-600 font-medium">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Step <span x-text="currentStep"></span> of 3</span>
+                <span class="text-sm font-medium text-gray-700" x-text="Math.round((currentStep / 3) * 100) + '%'"></span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="`width: ${(currentStep / 3) * 100}%`"></div>
+            </div>
+        </div>
+
+        <!-- Step 1: Connect Google -->
+        <div x-show="currentStep === 1" class="bg-white rounded-lg shadow p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Connect Your Google Account</h2>
+            <p class="text-gray-600 mb-6">
+                Smart Invoice needs access to your Google Sheets (to read invoices) and Gmail (to create email drafts).
+            </p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-700">
+                            We'll never send emails on your behalf. We only create drafts for you to review and send.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <button @click="connectGoogle()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Connect Google Account
+            </button>
+        </div>
+
+        <!-- Step 2: Select Sheet -->
+        <div x-show="currentStep === 2" class="bg-white rounded-lg shadow p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Select Your Invoice Sheet</h2>
+            <p class="text-gray-600 mb-6">
+                Enter the Google Sheet ID where you track your invoices. You can find this in the sheet's URL.
+            </p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Google Sheet ID</label>
+                <input 
+                    type="text" 
+                    x-model="sheetId"
+                    placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                <p class="mt-2 text-sm text-gray-500">
+                    Find this in your sheet URL: docs.google.com/spreadsheets/d/<strong>SHEET_ID</strong>/edit
+                </p>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            Make sure your sheet has these columns: <strong>Client Name, Invoice Number, Amount, Due Date, Status</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+                <button @click="currentStep = 1" class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    Back
+                </button>
+                <button @click="saveSheet()" :disabled="!sheetId" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Continue
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Sender Info -->
+        <div x-show="currentStep === 3" class="bg-white rounded-lg shadow p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Sender Information</h2>
+            <p class="text-gray-600 mb-6">
+                This information will be used in your follow-up emails to personalize them.
+            </p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                    <input 
+                        type="text" 
+                        x-model="senderName"
+                        placeholder="John Doe"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                    <input 
+                        type="text" 
+                        x-model="businessName"
+                        placeholder="Acme Corp"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+                <button @click="currentStep = 2" class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    Back
+                </button>
+                <button @click="completeSender Info()" :disabled="!senderName || !businessName" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Complete Setup
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Message -->
+        <div x-show="completed" class="bg-white rounded-lg shadow p-8 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Setup Complete!</h2>
+            <p class="text-gray-600 mb-6">
+                Your invoice collection is now active. We'll check your sheet daily and create follow-up email drafts automatically.
+            </p>
+            <a href="/dashboard.html" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Go to Dashboard
+            </a>
+        </div>
+    </main>
+
+    <script>
+        function onboarding() {
+            return {
+                currentStep: 1,
+                sheetId: '',
+                senderName: '',
+                businessName: '',
+                completed: false,
+
+                connectGoogle() {
+                    // Redirect to Google OAuth flow via backend
+                    window.location.href = '/api/onboarding/connect-google';
+                },
+
+                async saveSheet() {
+                    try {
+                        const response = await fetch('/api/onboarding/select-sheet', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ sheet_id: this.sheetId })
+                        });
+
+                        if (response.ok) {
+                            this.currentStep = 3;
+                        } else {
+                            alert('Failed to save sheet. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error saving sheet:', error);
+                        alert('An error occurred. Please try again.');
+                    }
+                },
+
+                async completeSenderInfo() {
+                    try {
+                        const response = await fetch('/api/onboarding/sender-info', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                name: this.senderName,
+                                business_name: this.businessName
+                            })
+                        });
+
+                        if (response.ok) {
+                            this.completed = true;
+                        } else {
+                            alert('Failed to save sender info. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error saving sender info:', error);
+                        alert('An error occurred. Please try again.');
+                    }
+                },
+
+                logout() {
+                    window.location.href = '/api/auth/logout';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
