@@ -64,9 +64,13 @@ async def get_user_config(
     
     # Return config
     return UserConfig(
-        sheet_id=user.sheet_id,
+        user_id=user.id,
+        email=user.email,
         sender_name=user.name,
         business_name=user.business_name,
+        sheet_id=user.sheet_id,
+        active=user.active,
+        paused=settings.system_paused,
         plan=user.plan,
         invoice_limit=invoice_limit
     )

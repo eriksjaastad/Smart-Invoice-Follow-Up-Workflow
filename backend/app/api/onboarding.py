@@ -1,47 +1,45 @@
 """
 Onboarding flow API routes.
 
-Provides endpoints for the 4-step onboarding process:
-1. Connect Google account via Make.com OAuth
-2. Select or create Google Sheet
-3. Provide sender information
-4. Activate account
+Provides endpoints for the onboarding process:
+1. Select or create Google Sheet (via Make.com webhooks)
+2. Provide sender information
+3. Activate account
 
-Note: Google OAuth and Sheets API interactions are handled by Make.com,
-not directly by this backend. We provide endpoints that coordinate with Make.com.
+Note: Google OAuth and Sheets API interactions are handled by Make.com webhooks.
+Users share their Google Sheet directly - no OAuth dance needed.
 """
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import UUID
+import httpx
 
 from app.core.auth import require_auth
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import User as UserSchema
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/onboarding", tags=["onboarding"])
 
+# Required columns for invoice sheet validation
+REQUIRED_COLUMNS = [
+    "Invoice_Number",
+    "Client_Name",
+    "Client_Email",
+    "Amount",
+    "Due_Date",
+    "Sent_Date",
+    "Paid"
+]
 
 # Request/Response models for onboarding steps
-
-class ConnectGoogleRequest(BaseModel):
-    """Request to initiate Google OAuth via Make.com"""
-    pass  # No fields needed - user is from JWT
-
-
-class ConnectGoogleResponse(BaseModel):
-    """Response with Make.com OAuth URL"""
-    oauth_url: str = Field(..., description="URL to redirect user to for Google OAuth")
-    state: str = Field(..., description="CSRF protection state parameter")
-
-
-class GoogleCallbackRequest(BaseModel):
-    """Callback from Make.com after Google OAuth"""
-    state: str = Field(..., description="CSRF state parameter to verify")
-    scenario_id: str = Field(..., description="Make.com scenario ID for this user")
 
 
 class SheetInfo(BaseModel):
@@ -83,80 +81,39 @@ class SenderInfoRequest(BaseModel):
     business_name: str = Field(..., min_length=1, description="Business name")
 
 
-# Onboarding endpoints
-
-@router.post("/connect-google", response_model=ConnectGoogleResponse)
+@router.get("/connect-google")
 async def connect_google(
-    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_auth)
 ):
     """
-    Step 1: Initiate Google OAuth via Make.com.
-    
-    TODO: This endpoint needs to:
-    1. Generate a CSRF state parameter
-    2. Store state in session or database
-    3. Call Make.com API to get OAuth URL
-    4. Return OAuth URL to frontend
-    
-    For now, this is a placeholder that returns a mock URL.
-    
-    Args:
-        db: Database session
-        current_user: Authenticated user
-        
-    Returns:
-        OAuth URL and state parameter
+    Step 1: Redirect user to Make.com for Google OAuth connection.
+
+    This initiates the Make.com connection flow where users authorize:
+    - gmail.compose
+    - spreadsheets
+
+    Note: The specific URL is managed in Make.com.
     """
-    # TODO: Implement Make.com OAuth URL generation
-    # This requires Make.com API integration
-    raise HTTPException(
-        status_code=501,
-        detail="Google OAuth integration not yet implemented. Requires Make.com API setup."
-    )
-
-
-@router.get("/callback", response_model=UserSchema)
-async def google_callback(
-    state: str,
-    scenario_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_auth)
-):
-    """
-    Step 1 (callback): Handle OAuth callback from Make.com.
+    # Use the first sheet list webhook as a proxy or a specific OAuth start URL if available
+    # For MVP, we redirect to a Make.com scenario that handles connection
+    if not settings.make_list_sheets_webhook_url:
+        raise HTTPException(
+            status_code=503,
+            detail="Service not configured. Make.com webhook URL is missing."
+        )
     
-    After user authorizes Google access, Make.com calls this endpoint
-    with the scenario_id that was created for this user.
-    
-    Args:
-        state: CSRF state parameter to verify
-        scenario_id: Make.com scenario ID
-        db: Database session
-        current_user: Authenticated user
-        
-    Returns:
-        Updated user object with scenario_id stored
-    """
-    # TODO: Verify state parameter matches what we stored
-    
-    # Store scenario_id in user record
-    current_user.make_scenario_id = scenario_id
-    await db.commit()
-    await db.refresh(current_user)
-    
-    return current_user
-
-
-@router.get("/sheets", response_model=SheetsListResponse)
+    # We redirect them to the Make.com webhook which will then redirect to Google
+    # Or in many Make.com setups, we just provide the link to their scenario/connection page
+    return {"url": settings.make_list_sheets_webhook_url}
 async def list_sheets(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_auth)
 ):
     """
-    Step 2: List user's Google Sheets via Make.com.
+    Step 1: List user's Google Sheets via Make.com webhook.
 
-    TODO: This endpoint needs to call Make.com API to list sheets.
+    Calls Make.com webhook to retrieve the user's Google Sheets.
+    Users share their sheet directly - no OAuth dance needed.
 
     Args:
         db: Database session
@@ -164,12 +121,49 @@ async def list_sheets(
 
     Returns:
         List of user's Google Sheets
+
+    Raises:
+        HTTPException 503: If webhook URL is not configured
+        HTTPException 500: If webhook call fails
     """
-    # TODO: Call Make.com API to list user's sheets
-    raise HTTPException(
-        status_code=501,
-        detail="Sheet listing not yet implemented. Requires Make.com API integration."
-    )
+    # Check if webhook URL is configured
+    if not settings.make_list_sheets_webhook_url:
+        raise HTTPException(
+            status_code=503,
+            detail="Service not configured. Make.com list sheets webhook URL is missing."
+        )
+
+    try:
+        # Call Make.com webhook to list sheets
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                settings.make_list_sheets_webhook_url,
+                json={"user_id": str(current_user.id)}
+            )
+            response.raise_for_status()
+
+            # Parse response from Make.com
+            data = response.json()
+            return SheetsListResponse(sheets=data.get("sheets", []))
+
+    except httpx.TimeoutException:
+        logger.error(f"Timeout calling Make.com list sheets webhook for user {current_user.id}")
+        raise HTTPException(
+            status_code=500,
+            detail="Request to list sheets timed out. Please try again."
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error from Make.com list sheets webhook: {e.response.status_code}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to list sheets: {e.response.text}"
+        )
+    except Exception as e:
+        logger.error(f"Error calling Make.com list sheets webhook: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to list sheets. Please try again."
+        )
 
 
 @router.post("/validate-sheet", response_model=SheetValidationResponse)
@@ -189,10 +183,12 @@ async def validate_sheet(
     - Due_Date
     - Sent_Date
     - Paid
-    - Last_Stage_Sent (optional, will be added if missing)
-    - Last_Sent_At (optional, will be added if missing)
 
-    TODO: This endpoint needs to call Make.com API to read sheet headers.
+    Optional columns (can be added if missing):
+    - Last_Stage_Sent
+    - Last_Sent_At
+
+    Calls Make.com webhook to read sheet headers and validate against required columns.
 
     Args:
         request: Sheet ID to validate
@@ -201,12 +197,57 @@ async def validate_sheet(
 
     Returns:
         Validation result with missing columns
+
+    Raises:
+        HTTPException 503: If webhook URL is not configured
+        HTTPException 500: If webhook call fails
     """
-    # TODO: Call Make.com API to read sheet headers and validate
-    raise HTTPException(
-        status_code=501,
-        detail="Sheet validation not yet implemented. Requires Make.com API integration."
-    )
+    # Check if webhook URL is configured
+    if not settings.make_validate_sheet_webhook_url:
+        raise HTTPException(
+            status_code=503,
+            detail="Service not configured. Make.com validate sheet webhook URL is missing."
+        )
+
+    try:
+        # Call Make.com webhook to read sheet headers
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                settings.make_validate_sheet_webhook_url,
+                json={"sheet_id": request.sheet_id}
+            )
+            response.raise_for_status()
+
+            # Parse response from Make.com
+            data = response.json()
+            columns = data.get("columns", [])
+
+            # Check for missing required columns
+            missing_columns = [col for col in REQUIRED_COLUMNS if col not in columns]
+
+            return SheetValidationResponse(
+                valid=len(missing_columns) == 0,
+                missing_columns=missing_columns
+            )
+
+    except httpx.TimeoutException:
+        logger.error(f"Timeout calling Make.com validate sheet webhook for sheet {request.sheet_id}")
+        raise HTTPException(
+            status_code=500,
+            detail="Request to validate sheet timed out. Please try again."
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error from Make.com validate sheet webhook: {e.response.status_code}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to validate sheet: {e.response.text}"
+        )
+    except Exception as e:
+        logger.error(f"Error calling Make.com validate sheet webhook: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to validate sheet. Please try again."
+        )
 
 
 @router.post("/select-sheet", response_model=UserSchema)
@@ -252,9 +293,7 @@ async def create_template_sheet(
     """
     Step 2 (alternative): Create a new Google Sheet with template columns.
 
-    Creates a new sheet with all required columns pre-populated.
-
-    TODO: This endpoint needs to call Make.com API to create sheet.
+    Creates a new sheet with all required columns pre-populated via Make.com webhook.
 
     Args:
         db: Database session
@@ -262,12 +301,58 @@ async def create_template_sheet(
 
     Returns:
         New sheet ID and URL
+
+    Raises:
+        HTTPException 503: If webhook URL is not configured
+        HTTPException 500: If webhook call fails
     """
-    # TODO: Call Make.com API to create template sheet
-    raise HTTPException(
-        status_code=501,
-        detail="Template creation not yet implemented. Requires Make.com API integration."
-    )
+    # Check if webhook URL is configured
+    if not settings.make_create_template_webhook_url:
+        raise HTTPException(
+            status_code=503,
+            detail="Service not configured. Make.com create template webhook URL is missing."
+        )
+
+    try:
+        # Call Make.com webhook to create template sheet
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                settings.make_create_template_webhook_url,
+                json={"user_id": str(current_user.id)}
+            )
+            response.raise_for_status()
+
+            # Parse response from Make.com
+            data = response.json()
+            return CreateTemplateResponse(
+                sheet_id=data["sheet_id"],
+                sheet_url=data["sheet_url"]
+            )
+
+    except httpx.TimeoutException:
+        logger.error(f"Timeout calling Make.com create template webhook for user {current_user.id}")
+        raise HTTPException(
+            status_code=500,
+            detail="Request to create template sheet timed out. Please try again."
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error from Make.com create template webhook: {e.response.status_code}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create template sheet: {e.response.text}"
+        )
+    except KeyError as e:
+        logger.error(f"Missing expected field in Make.com response: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Invalid response from template creation service."
+        )
+    except Exception as e:
+        logger.error(f"Error calling Make.com create template webhook: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to create template sheet. Please try again."
+        )
 
 
 @router.post("/sender-info", response_model=UserSchema)

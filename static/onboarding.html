@@ -147,7 +147,7 @@
                 <button @click="currentStep = 2" class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
                     Back
                 </button>
-                <button @click="completeSender Info()" :disabled="!senderName || !businessName" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <button @click="completeSenderInfo()" :disabled="!senderName || !businessName" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
                     Complete Setup
                 </button>
             </div>
@@ -179,9 +179,20 @@
                 businessName: '',
                 completed: false,
 
-                connectGoogle() {
-                    // Redirect to Google OAuth flow via backend
-                    window.location.href = '/api/onboarding/connect-google';
+                async connectGoogle() {
+                    try {
+                        const response = await fetch('/api/onboarding/connect-google', {
+                            credentials: 'include'
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            window.location.href = data.url;
+                        } else {
+                            alert('Failed to initiate Google connection.');
+                        }
+                    } catch (error) {
+                        console.error('Error connecting to Google:', error);
+                    }
                 },
 
                 async saveSheet() {

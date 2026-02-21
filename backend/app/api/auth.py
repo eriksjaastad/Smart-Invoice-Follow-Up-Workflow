@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from authlib.integrations.starlette_client import OAuth
 from typing import Optional
+import logging
 
 from app.core.config import settings
 from app.core.auth import get_current_user, require_auth
@@ -22,6 +23,8 @@ from app.schemas.user import User as UserSchema, UserCreate
 
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
+
+logger = logging.getLogger(__name__)
 
 
 # OAuth client configuration
@@ -112,14 +115,14 @@ async def callback(request: Request, db: AsyncSession = Depends(get_db)):
         # 2. Set a secure HTTP-only cookie
         # 3. Redirect to frontend dashboard
         
-        # For now, return user data (this would be replaced with redirect + session)
-        return {
-            "message": "Authentication successful",
-            "user": UserSchema.model_validate(user),
-            "is_new_user": user.created_at == user.updated_at
-        }
+        # Store user_id in session
+        request.session['user_id'] = str(user.id)
+        
+        # Redirect to dashboard
+        return RedirectResponse(url="/dashboard.html")
         
     except Exception as e:
+        logger.error(f"Authentication failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Authentication failed: {str(e)}"

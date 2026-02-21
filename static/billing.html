@@ -204,9 +204,14 @@
 
                 async upgradeToPro() {
                     try {
-                        const response = await fetch('/api/billing/create-checkout-session', {
+                        const response = await fetch('/api/billing/create-checkout', {
                             method: 'POST',
-                            credentials: 'include'
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                success_url: `${window.location.origin}/dashboard.html`,
+                                cancel_url: `${window.location.origin}/billing.html`
+                            })
                         });
                         
                         if (response.ok) {

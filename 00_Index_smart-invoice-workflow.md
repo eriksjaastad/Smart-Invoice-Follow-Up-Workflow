@@ -2,84 +2,62 @@
 tags:
   - map/project
   - p/smart-invoice-workflow
-  - type/ai-agent
+  - type/saas
   - domain/business-automation
   - status/active
 created: 2026-01-02
+updated: 2026-02-15
 ---
 
 # smart-invoice-workflow: Index
 
-This document serves as the central index for the Smart Invoice Workflow project, an automated invoice collection and follow-up system powered by AI. It provides an overview of the project's purpose, key components, and related documentation.
+Hosted SaaS that automates invoice follow-up for small businesses. Users sign up, connect Google via Make.com, pick their invoice sheet, and the system creates escalating Gmail draft reminders on a 42-day schedule.
 
-**Project Goal:** To streamline and automate the accounts receivable process, reducing manual effort and improving cash flow.
+**Company:** Synth Insight Labs
+**Revenue model:** Free (3 invoices/day) + Paid ($15/month, 100 invoices/day)
 
-## Overview
+## Tech Stack
 
-The Smart Invoice Workflow uses a Python-based engine to:
+- **Backend:** FastAPI + SQLAlchemy (async PostgreSQL)
+- **Frontend:** Static HTML + Alpine.js (Vercel)
+- **Auth:** Auth0
+- **Automation:** Make.com Pro
+- **Payments:** Stripe Checkout
+- **Email:** SendGrid
 
-*   Track invoice statuses in a Google Sheet.
-*   Automate email correspondence with customers based on invoice age and payment status.
-*   Utilize a multi-stage email template system for professional and increasingly urgent communication.
-*   Schedule regular outreach to ensure consistent follow-up.
+## External Services
 
-## Key Components
+- Auth0 (authentication)
+- Make.com (Google Sheets/Gmail automation)
+- Stripe (billing)
+- SendGrid (digest + notification emails)
+- Vercel (hosting)
+- PostgreSQL (database)
 
-### 1. Automation Engine
+## Key Endpoints
 
-The core of the system, responsible for processing invoices, sending emails, and updating the Google Sheet.
-
-*   **`main.py`**: The main script that orchestrates the entire workflow.
-*   **`src/invoice_collector/`**: Contains modular business logic, including:
-    *   **`sheets.py`**: Interacts with the Google Sheet to read and write invoice data.
-    *   **`emailer.py`**: Sends emails using pre-defined templates.
-    *   **`scheduler.py`**: Schedules email sending based on invoice due dates and configured intervals.
-*   **`src/invoice_collector/templates/`**: Stores multi-stage email templates. Templates are designed for different stages of invoice overdue status (e.g., 7 days, 14 days, 42 days overdue).
-
-### 2. Documentation
-
-Comprehensive documentation covering various aspects of the project.
-
-*   **`Documents/core/Automatic_Invoice_Collection_System_From_Scratch.md`**: A detailed system blueprint outlining the architecture and design of the workflow.
-*   **`Documents/guides/`**: Contains guides for:
-    *   **Setup**: Instructions on how to configure the system.
-    *   **Quickstart**: A brief guide to get the system running quickly.
-    *   **First Sale**: Guidance on using the system to collect on the first invoice.
-*   **`Documents/reference/`**: Includes:
-    *   **Sales Strategy**: Documentation on effective sales strategies for invoice collection.
-    *   **Spreadsheet Templates**: Example Google Sheet templates for managing invoice data.
-
-### 3. Infrastructure
-
-Files necessary for deploying and running the system.
-
-*   **`Dockerfile`**: Defines the container environment for easy deployment using Docker.
-*   **`requirements.txt`**: Lists all Python dependencies required to run the project.
+- `GET /api/users/{id}/config` — Make.com calls this to get user config
+- `POST /api/webhooks/make-results` — Make.com reports daily run results
+- `POST /api/webhooks/stripe` — Stripe payment webhooks
+- `POST /api/digest/trigger` — Cron-triggered weekly digest
 
 ## Status
 
-**Tags:** #map/project #p/smart-invoice-workflow
-**Status:** #status/active
-**Type:** #type/ai-agent
-**Last Major Update:** January 2026 (Documents Restructured)
-**Purpose:** Business automation for accounts receivable
+**Phase:** Active development (backend built, frontend in progress)
+**Goal:** Ship MVP, get one paying customer
+**PRD:** Approved 2026-02-09, updated 2026-02-15
 
 scaffolding_version: 1.0.0
 scaffolding_date: 2026-01-27
 
 ## Related Documentation
 
-*   [Automation Reliability](patterns/automation-reliability.md) - General automation patterns and best practices.
-*   [[queue_processing_guide]] - Information on queue and workflow management.
-*   [[deployment_patterns]] - Deployment strategies and patterns for the system.
-*   [[sales_strategy]] - Detailed documentation on sales and business strategies related to invoice collection.
-*   [README](README) - The project's README file, providing a quick overview and instructions.
-
-## Getting Started
-
-1.  Refer to the `Documents/guides/Setup` guide for initial configuration.
-2.  Explore the `Documents/core/Automatic_Invoice_Collection_System_From_Scratch.md` for a deep dive into the system architecture.
-3.  Consult the `README.md` file for a quick start.
+- [PRD](PRD.md) — Product requirements (source of truth)
+- [PROPOSAL_FINAL](PROPOSAL_FINAL.md) — Traceability: PRD → Kiro specs
+- [IMPLEMENTATION_PROGRESS](IMPLEMENTATION_PROGRESS.md) — Build tracker
+- [LAUNCH_CHECKLIST](LAUNCH_CHECKLIST.md) — Pre-launch gates
+- [RUNBOOK](RUNBOOK.md) — Operations manual
+- [README](README.md) — Project overview and directory map
 
 <!-- LIBRARIAN-INDEX-START -->
 
@@ -89,37 +67,30 @@ scaffolding_date: 2026-01-27
 | :--- | :---: | :--- |
 | [Documents/](Documents/README.md) | 2 | *Auto-generated index. Last updated: 2026-01-24* |
 | [backend/](backend/) | 1 | No description available. |
-| [case-studies/](case-studies/) | 2 | No description available. |
+| [case-studies/](case-studies/) | 4 | No description available. |
 | [static/](static/) | 6 | No description available. |
 
 ### Files
 
 | File | Description |
 | :--- | :--- |
-| [2-14-2026_hard-rules.md](2-14-2026_hard-rules.md) | Got it — I’m **not** going to talk you out of it. You’ve got the right posture baked into the PRD: *... |
-| [AGENTS.md](AGENTS.md) | 🎯 Project Overview |
-| [AUDIT_2026-02-05.md](AUDIT_2026-02-05.md) | **Date:** 2026-02-05 |
-| [BUSINESS IDEA.md](BUSINESS IDEA.md) | Don't beat yourself up about the "Smart Invoice" workflow being on GitHub. Some of the biggest compa... |
-| [CLAUDE.md](CLAUDE.md) | AI Collaboration Instructions |
+| [AGENTS.md](AGENTS.md) | > The single source of truth for hierarchy, workflow, and AI collaboration philosophy. |
+| [CLAUDE.md](CLAUDE.md) | **Python execution:** Never use `python` or `python3`. Always use `$HOME/.local/bin/uv run`. |
 | [DECISIONS.md](DECISIONS.md) | > *Documenting WHY we made decisions, not just WHAT we built.* |
-| [Dockerfile](Dockerfile) | No description available. |
 | [Documents/README.md](Documents/README.md) | *Auto-generated index. Last updated: 2026-01-24* |
-| [Documents/REVIEWS_AND_GOVERNANCE_PROTOCOL.md](Documents/REVIEWS_AND_GOVERNANCE_PROTOCOL.md) | 🛡️ Ecosystem Governance & Review Protocol (v1.2) |
-| [Documents/core/Automatic_Invoice_Collection_System_From_Scratch.md](Documents/core/Automatic_Invoice_Collection_System_From_Scratch.md) | Automatic Invoice Collection System — From Scratch (Python) |
-| [Documents/core/Smart Invoice Follow-Up Workflow.md](Documents/core/Smart Invoice Follow-Up Workflow.md) | Today’s Client Ready Workflow solves one of the most painful problems every service business faces: |
-| [Documents/guides/FIRST_SALE_GUIDE.md](Documents/guides/FIRST_SALE_GUIDE.md) | First Sale Guide for the Smart Invoice Follow-Up System |
-| [Documents/guides/QUICK_START.md](Documents/guides/QUICK_START.md) | Quick Start Guide: Invoice Collector |
-| [Documents/guides/SETUP.md](Documents/guides/SETUP.md) | Complete setup instructions for the smart-invoice-workflow Python implementation. This guide walks y... |
-| [Documents/patterns/code-review-standard.md](Documents/patterns/code-review-standard.md) | Code Review Standardization |
-| [Documents/patterns/learning-loop-pattern.md](Documents/patterns/learning-loop-pattern.md) | Learning Loop Pattern |
-| [Documents/reference/GOOGLE_SHEET_TEMPLATE.md](Documents/reference/GOOGLE_SHEET_TEMPLATE.md) | Google Sheets Template for Invoice Tracking |
-| [Documents/reference/LOCAL_MODEL_LEARNINGS.md](Documents/reference/LOCAL_MODEL_LEARNINGS.md) | Local Model Learnings |
-| [Documents/reference/SALES_STRATEGY.md](Documents/reference/SALES_STRATEGY.md) | Sales Strategy Guide for Invoice Collection System |
-| [Gemini-ideas.md](Gemini-ideas.md) | import pandas as pd |
-| [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) | **Date:** 2026-02-14 |
+| [Documents/REVIEWS_AND_GOVERNANCE_PROTOCOL.md](Documents/REVIEWS_AND_GOVERNANCE_PROTOCOL.md) | This file is managed by sync_governance.py and will be OVERWRITTEN on the next sync. |
+| [Documents/guides/FIRST_SALE_GUIDE.md](Documents/guides/FIRST_SALE_GUIDE.md) | **Goal:** Help you make your *very first* dollar from this system without needing to “be good at sal... |
+| [Documents/make-blueprints/Integration HTTP, Google Sheets, Tools, Gmail.blueprint.json](Documents/make-blueprints/Integration HTTP, Google Sheets, Tools, Gmail.blueprint.json) | No description available. |
+| [Documents/patterns/code-review-standard.md](Documents/patterns/code-review-standard.md) | **Status:** Proven Pattern |
+| [Documents/patterns/learning-loop-pattern.md](Documents/patterns/learning-loop-pattern.md) | > **Purpose:** Guide for creating reinforcement learning cycles in any project |
+| [Documents/reference/GOOGLE_SHEET_TEMPLATE.md](Documents/reference/GOOGLE_SHEET_TEMPLATE.md) | Create a new Google Sheet with these exact column headers in row 1: |
+| [Documents/reference/LOCAL_MODEL_LEARNINGS.md](Documents/reference/LOCAL_MODEL_LEARNINGS.md) | > **Purpose:** Institutional memory for working with local AI models (Ollama) |
+| [Documents/reference/SALES_STRATEGY.md](Documents/reference/SALES_STRATEGY.md) | For people who hate sales but need to make money |
+| [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) | **Last Updated:** 2026-02-15 |
 | [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) | **Scope reminder (MVP firewall):** Ship only what supports **sign up → connect Google → pick sheet →... |
-| [PRD.md](PRD.md) | **Version:** 1.0 |
-| [README.md](README.md) | Smart Invoice Workflow |
+| [PRD.md](PRD.md) | **Version:** 1.1 |
+| [PROPOSAL_FINAL.md](PROPOSAL_FINAL.md) | **Document Version:** 1.0 |
+| [README.md](README.md) | Hosted SaaS that automates invoice follow-up for small businesses. |
 | [RUNBOOK.md](RUNBOOK.md) | This runbook is for **operating SIW safely** during MVP: diagnosing failures, preventing runaway beh... |
 | [backend/alembic/env.py](backend/alembic/env.py) | Alembic environment configuration for async SQLAlchemy |
 | [backend/alembic/script.py.mako](backend/alembic/script.py.mako) | No description available. |
@@ -156,11 +127,11 @@ scaffolding_date: 2026-01-27
 | [backend/app/services/notifications.py](backend/app/services/notifications.py) | Error notification service. |
 | [case-studies/JP-Middleton.md](case-studies/JP-Middleton.md) | JP Middleton’s business, **StartGrowSell.ai** (and its operational arm **GymMembersNow**), is a stro... |
 | [case-studies/business-sources.md](case-studies/business-sources.md) | To get past the "influencer" noise and find out where real business-to-business (B2B) deals actually... |
+| [case-studies/gemini-ideas-business-research.md](case-studies/gemini-ideas-business-research.md) | import pandas as pd |
+| [case-studies/pricing-research.md](case-studies/pricing-research.md) | Since you’re looking at an automated invoice service, your pricing model is actually your biggest co... |
 | [email_autoresponder.json](email_autoresponder.json) | No description available. |
-| [gemini-research-for-prd.md](gemini-research-for-prd.md) | Building a SaaS on Make.com requires a clean "headless" architecture where your backend treats scena... |
 | [main.py](main.py) | No description available. |
 | [pyproject.toml](pyproject.toml) | No description available. |
-| [requirements.txt](requirements.txt) | No description available. |
 | [static/billing.html](static/billing.html) | No description available. |
 | [static/dashboard.html](static/dashboard.html) | No description available. |
 | [static/index.html](static/index.html) | No description available. |
