@@ -13,8 +13,7 @@ from uuid import UUID
 from jinja2 import Template
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import resend
 
 from app.core.config import settings
 from app.models.user import User
@@ -23,10 +22,33 @@ from app.schemas.digest import DigestData
 
 logger = logging.getLogger(__name__)
 
-# Load email template
+# Email template - lazy loaded to prevent startup crash if file is missing
 TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "digest_email.html"
-with open(TEMPLATE_PATH, "r") as f:
-    EMAIL_TEMPLATE = Template(f.read())
+_EMAIL_TEMPLATE: Optional[Template] = None
+
+
+def _get_email_template() -> Template:
+    """
+    Lazy-load the email template.
+
+    This prevents the app from crashing on startup if the template file is missing.
+    Instead, the error will occur only when trying to send a digest email.
+
+    Returns:
+        Jinja2 Template object
+
+    Raises:
+        FileNotFoundError: If template file doesn't exist
+    """
+    global _EMAIL_TEMPLATE
+    if _EMAIL_TEMPLATE is None:
+        try:
+            with open(TEMPLATE_PATH, "r") as f:
+                _EMAIL_TEMPLATE = Template(f.read())
+        except FileNotFoundError:
+            logger.error(f"Email template not found at {TEMPLATE_PATH}")
+            raise
+    return _EMAIL_TEMPLATE
 
 
 async def calculate_digest(user_id: UUID, db: AsyncSession) -> Optional[DigestData]:
@@ -90,7 +112,7 @@ async def calculate_digest(user_id: UUID, db: AsyncSession) -> Optional[DigestDa
 
 async def send_digest_email(digest_data: DigestData) -> bool:
     """
-    Send weekly digest email to a user via SendGrid.
+    Send weekly digest email to a user via Resend.
     
     Args:
         digest_data: Digest data for the email
@@ -99,16 +121,17 @@ async def send_digest_email(digest_data: DigestData) -> bool:
         True if email sent successfully, False otherwise
     """
     try:
-        # Check if SendGrid API key is configured
-        if not settings.sendgrid_api_key or settings.sendgrid_api_key == "your_sendgrid_api_key_here":
-            logger.warning(f"SendGrid not configured, skipping email to {digest_data.user_email}")
+        # Check if Resend is configured
+        if not settings.resend_api_key or settings.resend_api_key == "you_resend_api_key":
+            logger.warning(f"Resend not configured, skipping email to {digest_data.user_email}")
             return False
-        
+
         # Create email content
         subject = f"Weekly Invoice Summary for {digest_data.business_name}"
 
         # Render HTML content from template
-        html_content = EMAIL_TEMPLATE.render(
+        template = _get_email_template()
+        html_content = template.render(
             user_name=digest_data.user_name,
             business_name=digest_data.business_name,
             drafts_count=digest_data.drafts_count,
@@ -117,26 +140,19 @@ async def send_digest_email(digest_data: DigestData) -> bool:
             plan=digest_data.plan,
             frontend_url=settings.frontend_url
         )
-        
-        # Create SendGrid message
-        message = Mail(
-            from_email=settings.sendgrid_from_email,
-            to_emails=digest_data.user_email,
-            subject=subject,
-            html_content=html_content
-        )
-        
-        # Send email
-        sg = SendGridAPIClient(settings.sendgrid_api_key)
-        response = sg.send(message)
-        
-        if response.status_code in [200, 201, 202]:
-            logger.info(f"Digest email sent successfully to {digest_data.user_email}")
-            return True
-        else:
-            logger.error(f"SendGrid returned status {response.status_code} for {digest_data.user_email}")
-            return False
-            
+
+        # Send email via Resend
+        resend.api_key = settings.resend_api_key
+        response = resend.Emails.send({
+            "from": settings.resend_from_email,
+            "to": [digest_data.user_email],
+            "subject": subject,
+            "html": html_content
+        })
+
+        logger.info(f"Digest email sent successfully to {digest_data.user_email} (id: {response['id']})")
+        return True
+
     except Exception as e:
         logger.error(f"Failed to send digest email to {digest_data.user_email}: {str(e)}")
         return False

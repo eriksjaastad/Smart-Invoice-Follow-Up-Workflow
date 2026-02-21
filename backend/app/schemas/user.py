@@ -53,11 +53,13 @@ class UserConfig(BaseModel):
     """
     user_id: UUID
     email: EmailStr
-    name: str
+    sender_name: str
     business_name: str
     sheet_id: str
     active: bool
+    paused: bool  # Global kill switch status
     plan: str
+    invoice_limit: int  # 3 for free, 100 for paid
     
     model_config = ConfigDict(from_attributes=True)
 

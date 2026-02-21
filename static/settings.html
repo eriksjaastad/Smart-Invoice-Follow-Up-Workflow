@@ -193,8 +193,8 @@
 
                 async updateProfile() {
                     try {
-                        const response = await fetch('/api/users/profile', {
-                            method: 'PUT',
+                        const response = await fetch(`/api/users/${this.user.id}`, {
+                            method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'include',
                             body: JSON.stringify({

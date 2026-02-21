@@ -2,6 +2,7 @@
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
@@ -42,10 +43,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files (path relative to project root)
-static_dir = Path(__file__).parent.parent.parent / "static"
-if static_dir.exists():
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+# Configure Sessions
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,
+    session_cookie="siw_session",
+    max_age=3600 * 24 * 7,  # 7 days
+)
 
 # Health check endpoint
 @app.get("/health")
@@ -84,4 +88,9 @@ app.include_router(onboarding_router)
 app.include_router(billing_router)
 app.include_router(digest_router)
 app.include_router(notifications_router)
+
+# Mount static files (path relative to project root)
+static_dir = Path(__file__).parent.parent.parent / "static"
+if static_dir.exists():
+    app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
 

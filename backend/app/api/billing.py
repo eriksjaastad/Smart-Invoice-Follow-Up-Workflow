@@ -104,6 +104,39 @@ async def create_checkout_session(
         raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
 
 
+@router.post("/customer-portal")
+async def create_customer_portal_session(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_auth)
+):
+    """
+    Create a Stripe Customer Portal session.
+    
+    Allows users to manage their subscription and payment methods.
+    
+    Args:
+        db: Database session
+        current_user: Authenticated user
+        
+    Returns:
+        Portal URL
+        
+    Raises:
+        HTTPException 400: If user has no Stripe customer ID
+    """
+    if not current_user.stripe_customer_id:
+        raise HTTPException(status_code=400, detail="No active subscription found")
+    
+    try:
+        portal_session = stripe.billing_portal.Session.create(
+            customer=current_user.stripe_customer_id,
+            return_url=f"{settings.frontend_url}/billing.html",
+        )
+        return {"portal_url": portal_session.url}
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
+
+
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,

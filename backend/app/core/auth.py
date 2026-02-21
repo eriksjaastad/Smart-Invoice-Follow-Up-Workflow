@@ -5,10 +5,11 @@ This module provides JWT validation and user authentication via Auth0.
 Auth0 is non-negotiable for security - do NOT replace with custom JWT or homebrew auth.
 """
 from typing import Optional
-from fastapi import Depends, HTTPException, Header, status
+from fastapi import Depends, HTTPException, Header, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.core.config import settings
 from app.db.session import get_db
@@ -16,8 +17,8 @@ from app.models import User
 from sqlalchemy import select
 
 
-# HTTP Bearer token security scheme
-security = HTTPBearer()
+# HTTP Bearer token security scheme - auto_error=False to allow session-based auth
+security = HTTPBearer(auto_error=False)
 
 
 class AuthError(Exception):
@@ -61,15 +62,18 @@ def verify_jwt(token: str) -> dict:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> User:
     """
     Dependency to get the current authenticated user.
     
-    This validates the JWT token and retrieves the user from the database.
+    This validates either the JWT token in the Authorization header 
+    OR the session cookie set during Auth0 callback.
     
     Args:
+        request: FastAPI request object (for session)
         credentials: HTTP Bearer credentials from request header
         db: Database session
         
@@ -79,46 +83,63 @@ async def get_current_user(
     Raises:
         HTTPException: If authentication fails
     """
-    try:
-        # Verify JWT token
-        payload = verify_jwt(credentials.credentials)
-        
-        # Extract auth0_user_id from token
-        # Auth0 typically uses 'sub' (subject) claim for user ID
-        auth0_user_id: str = payload.get("sub")
-        if not auth0_user_id:
+    # 1. Try JWT Bearer Token (API path)
+    if credentials:
+        try:
+            # Verify JWT token
+            payload = verify_jwt(credentials.credentials)
+            
+            # Extract auth0_user_id from token
+            auth0_user_id: str = payload.get("sub")
+            if auth0_user_id:
+                # Fetch user from database
+                result = await db.execute(
+                    select(User).where(User.auth0_user_id == auth0_user_id)
+                )
+                user = result.scalar_one_or_none()
+                
+                if user:
+                    if not user.active:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="User account is inactive",
+                        )
+                    return user
+        except AuthError as e:
+            # Only raise if Bearer was provided but invalid
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
+                status_code=e.status_code,
+                detail=e.error,
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
-        # Fetch user from database
-        result = await db.execute(
-            select(User).where(User.auth0_user_id == auth0_user_id)
-        )
-        user = result.scalar_one_or_none()
-        
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
+
+    # 2. Try Session Cookie (Frontend path)
+    user_id = request.session.get("user_id")
+    if user_id:
+        try:
+            # Fetch user from database using UUID
+            result = await db.execute(
+                select(User).where(User.id == UUID(user_id))
             )
-        
-        if not user.active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User account is inactive",
-            )
-        
-        return user
-        
-    except AuthError as e:
-        raise HTTPException(
-            status_code=e.status_code,
-            detail=e.error,
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+            user = result.scalar_one_or_none()
+            
+            if user:
+                if not user.active:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="User account is inactive",
+                    )
+                return user
+        except (ValueError, TypeError):
+            # Invalid UUID in session
+            pass
+
+    # No valid auth found
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 async def get_current_active_user(

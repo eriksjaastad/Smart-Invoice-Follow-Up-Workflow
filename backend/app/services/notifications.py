@@ -10,8 +10,7 @@ from uuid import UUID
 
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import resend
 from jinja2 import Template
 from pathlib import Path
 
@@ -109,22 +108,22 @@ async def send_error_notification(user: User, failure_info: dict) -> bool:
         True if email sent successfully, False otherwise
     """
     try:
-        # Check if SendGrid is configured
-        if not settings.sendgrid_api_key or settings.sendgrid_api_key == "SG.your_sendgrid_api_key":
-            logger.warning(f"SendGrid not configured, skipping error notification to {user.email}")
+        # Check if Resend is configured
+        if not settings.resend_api_key or settings.resend_api_key == "you_resend_api_key":
+            logger.warning(f"Resend not configured, skipping error notification to {user.email}")
             return False
-        
+
         # Load appropriate template based on error type
         error_type = failure_info['error_type']
         template_path = Path(__file__).parent.parent / "templates" / f"error_{error_type}.html"
-        
+
         # Fall back to generic template if specific template doesn't exist
         if not template_path.exists():
             template_path = Path(__file__).parent.parent / "templates" / "error_generic.html"
-        
+
         with open(template_path, "r") as f:
             template = Template(f.read())
-        
+
         # Render email content
         html_content = template.render(
             user_name=user.name,
@@ -133,7 +132,7 @@ async def send_error_notification(user: User, failure_info: dict) -> bool:
             error_details=failure_info['last_error'],
             frontend_url=settings.frontend_url
         )
-        
+
         # Create subject based on error type
         subject_map = {
             'sheet_access': f"Action Required: Google Sheets Access Lost - {user.business_name}",
@@ -141,25 +140,19 @@ async def send_error_notification(user: User, failure_info: dict) -> bool:
             'generic': f"Action Required: Invoice Collection Errors - {user.business_name}"
         }
         subject = subject_map.get(error_type, subject_map['generic'])
-        
-        # Create and send email
-        message = Mail(
-            from_email=settings.sendgrid_from_email,
-            to_emails=user.email,
-            subject=subject,
-            html_content=html_content
-        )
 
-        sg = SendGridAPIClient(settings.sendgrid_api_key)
-        response = sg.send(message)
-        
-        if response.status_code in [200, 201, 202]:
-            logger.info(f"Error notification sent successfully to {user.email} (type: {error_type})")
-            return True
-        else:
-            logger.error(f"SendGrid returned status {response.status_code} for {user.email}")
-            return False
-            
+        # Send email via Resend
+        resend.api_key = settings.resend_api_key
+        response = resend.Emails.send({
+            "from": settings.resend_from_email,
+            "to": [user.email],
+            "subject": subject,
+            "html": html_content
+        })
+
+        logger.info(f"Error notification sent successfully to {user.email} (type: {error_type}, id: {response['id']})")
+        return True
+
     except Exception as e:
         logger.error(f"Failed to send error notification to {user.email}: {str(e)}")
         return False
