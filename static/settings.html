@@ -3,163 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Smart Invoice</title>
+    <title>Settings | Smart Invoice</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
-    <!-- htmx -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="bg-gray-50" x-data="settings()">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+<body class="bg-slate-50 text-slate-900" x-data="settings()" x-cloak>
+    
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-24 items-center">
                 <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-blue-600">Smart Invoice</h1>
+                    <img src="/images/logo.png" alt="Smart Invoice" class="h-16 w-auto object-contain mix-blend-multiply">
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/dashboard.html" class="text-gray-700 hover:text-blue-600">Dashboard</a>
-                    <button @click="logout()" class="text-gray-700 hover:text-blue-600 font-medium">Logout</button>
+                <div class="flex items-center space-x-6">
+                    <a href="/dashboard.html" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Dashboard</a>
+                    <a href="/billing.html" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Billing</a>
+                    <div class="h-4 w-px bg-slate-200"></div>
+                    <button @click="logout()" class="text-sm font-medium text-slate-600 hover:text-red-600 transition-colors">Log out</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 class="text-3xl font-bold text-gray-900 mb-8">Account Settings</h2>
-
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
         <!-- Loading State -->
-        <div x-show="loading" class="text-center py-12">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p class="text-gray-600">Loading settings...</p>
+        <div x-show="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-slate-500 font-medium">Loading settings...</p>
         </div>
 
-        <!-- Settings Content -->
-        <div x-show="!loading" class="space-y-6">
-            <!-- Profile Information -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Profile Information</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input 
-                            type="email" 
-                            x-model="user.email"
-                            disabled
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                        >
-                        <p class="mt-1 text-sm text-gray-500">Email cannot be changed (managed by Auth0)</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
-                        <input 
-                            type="text" 
-                            x-model="user.name"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-                        <input 
-                            type="text" 
-                            x-model="user.business_name"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                    </div>
-
-                    <button @click="updateProfile()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-                        Save Changes
-                    </button>
+        <div x-show="!loading" class="space-y-8">
+            
+            <div class="mb-8 flex justify-between items-end">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">App Settings</h1>
+                    <p class="text-slate-500 mt-1">Configure your emails and spreadsheet integration.</p>
                 </div>
             </div>
 
-            <!-- Google Sheet Configuration -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Google Sheet Configuration</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Sheet ID</label>
-                        <input 
-                            type="text" 
-                            x-model="user.sheet_id"
-                            placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                        <p class="mt-1 text-sm text-gray-500">
-                            Find this in your sheet URL: docs.google.com/spreadsheets/d/<strong>SHEET_ID</strong>/edit
-                        </p>
-                    </div>
-
-                    <button @click="updateSheet()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-                        Update Sheet
-                    </button>
+            <!-- Profile / Sender Settings -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-100 bg-slate-50">
+                    <h3 class="text-lg font-bold text-slate-900">Email Signatures</h3>
+                    <p class="text-sm text-slate-500 mt-1">How you sign off your automated drafts.</p>
                 </div>
-            </div>
-
-            <!-- Google Connection -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Google Account Connection</h3>
-                <p class="text-gray-600 mb-4">
-                    If you're experiencing errors accessing your Google Sheet or Gmail, try reconnecting your Google account.
-                </p>
-                <button @click="reconnectGoogle()" class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition">
-                    Reconnect Google Account
-                </button>
-            </div>
-
-            <!-- Plan Information -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Subscription Plan</h3>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-lg font-semibold text-gray-900" x-text="user.plan === 'paid' ? 'Pro Plan' : 'Free Plan'"></p>
-                        <p class="text-sm text-gray-600" x-text="user.plan === 'paid' ? 'Up to 100 invoices' : 'Up to 3 invoices'"></p>
-                    </div>
-                    <div>
-                        <a x-show="user.plan === 'free'" href="/billing.html" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-                            Upgrade to Pro
-                        </a>
-                        <a x-show="user.plan === 'paid'" href="/billing.html" class="text-blue-600 hover:text-blue-700 font-medium">
-                            Manage Billing
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Account Status -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Account Status</h3>
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div :class="user.active ? 'bg-green-100' : 'bg-red-100'" class="w-12 h-12 rounded-full flex items-center justify-center">
-                            <svg x-show="user.active" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <svg x-show="!user.active" class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
+                <div class="p-6">
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Auth Email</label>
+                            <input type="email" x-model="user.email" disabled class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed font-mono text-sm">
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Sender Name</label>
+                                <input type="text" x-model="user.name" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Business Name</label>
+                                <input type="text" x-model="user.business_name" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <button @click="updateProfile()" :disabled="isSavingProfile" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2">
+                                <span x-show="!isSavingProfile">Save Profile</span>
+                                <div x-show="isSavingProfile" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            </button>
                         </div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-lg font-semibold text-gray-900" x-text="user.active ? 'Active' : 'Inactive'"></p>
-                        <p class="text-sm text-gray-600" x-text="user.active ? 'Your invoice collection is running' : 'Your invoice collection is paused'"></p>
+                </div>
+            </div>
+
+            <!-- Spreadsheet Settings -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-100 bg-slate-50">
+                    <h3 class="text-lg font-bold text-slate-900">Google Spreadsheet</h3>
+                    <p class="text-sm text-slate-500 mt-1">The single source of truth for your invoices.</p>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Google Sheet ID</label>
+                            <input type="text" x-model="user.sheet_id" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-shadow font-mono text-sm placeholder-slate-400">
+                        </div>
+                        <div class="pt-2 flex items-center justify-between">
+                            <button @click="updateSheet()" :disabled="isSavingSheet" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2">
+                                <span x-show="!isSavingSheet">Update Sheet ID</span>
+                                <div x-show="isSavingSheet" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            </button>
+                            <button @click="reconnectGoogle()" class="text-sm font-medium text-slate-600 hover:text-slate-900 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                                Reconnect Google Account
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Danger Zone -->
+            <div class="bg-white border border-red-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-red-100 bg-red-50">
+                    <h3 class="text-lg font-bold text-red-900">System Controls</h3>
+                    <p class="text-sm text-red-700 mt-1">Global pause for your background jobs.</p>
+                </div>
+                <div class="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <p class="font-bold text-slate-900">Pause All Automations</p>
+                        <p class="text-sm text-slate-500 max-w-sm mt-1">If enabled, we will stop checking your spreadsheet entirely. No drafts will be created.</p>
+                    </div>
+                    <button @click="toggleActive()" class="font-semibold py-2.5 px-6 rounded-xl transition-colors shadow-sm border" :class="user.active ? 'bg-white text-red-600 border-red-200 hover:bg-red-50' : 'bg-emerald-600 text-white border-transparent hover:bg-emerald-700'">
+                        <span x-text="user.active ? 'Pause System' : 'Resume System'"></span>
+                    </button>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Success Message -->
-        <div x-show="successMessage" x-transition class="fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg">
-            <p x-text="successMessage"></p>
+        <!-- Global Toast -->
+        <div x-show="toast.visible" x-transition.opacity.duration.300ms class="fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-xl font-medium text-sm flex items-center gap-3 z-50 border" :class="toast.type === 'success' ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : 'bg-red-50 text-red-900 border-red-200'">
+            <svg x-show="toast.type === 'success'" class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span x-text="toast.message"></span>
         </div>
+
     </main>
 
     <script>
@@ -167,31 +141,27 @@
             return {
                 user: {},
                 loading: true,
-                successMessage: '',
+                isSavingProfile: false,
+                isSavingSheet: false,
+                toast: { visible: false, message: '', type: 'success' },
 
                 async init() {
-                    await this.loadUser();
-                },
-
-                async loadUser() {
                     try {
-                        const response = await fetch('/api/auth/me', {
-                            credentials: 'include'
-                        });
-                        
+                        const response = await fetch('/api/auth/me', { credentials: 'include' });
                         if (response.ok) {
                             this.user = await response.json();
                         } else {
                             window.location.href = '/login.html';
                         }
                     } catch (error) {
-                        console.error('Error loading user:', error);
+                        console.error('Failed to load', error);
                     } finally {
                         this.loading = false;
                     }
                 },
 
                 async updateProfile() {
+                    this.isSavingProfile = true;
                     try {
                         const response = await fetch(`/api/users/${this.user.id}`, {
                             method: 'PATCH',
@@ -202,35 +172,56 @@
                                 business_name: this.user.business_name
                             })
                         });
-
                         if (response.ok) {
-                            this.showSuccess('Profile updated successfully');
+                            this.showToast('Profile updated successfully');
                         } else {
-                            alert('Failed to update profile');
+                            this.showToast('Failed to update profile', 'error');
                         }
                     } catch (error) {
-                        console.error('Error updating profile:', error);
-                        alert('An error occurred');
+                        this.showToast('Network error', 'error');
+                    } finally {
+                        this.isSavingProfile = false;
                     }
                 },
 
                 async updateSheet() {
+                    this.isSavingSheet = true;
                     try {
-                        const response = await fetch('/api/onboarding/select-sheet', {
-                            method: 'POST',
+                        const response = await fetch(`/api/users/${this.user.id}`, {
+                            method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'include',
                             body: JSON.stringify({ sheet_id: this.user.sheet_id })
                         });
-
                         if (response.ok) {
-                            this.showSuccess('Sheet updated successfully');
+                            this.showToast('Sheet ID updated successfully');
                         } else {
-                            alert('Failed to update sheet');
+                            this.showToast('Failed to update sheet', 'error');
                         }
                     } catch (error) {
-                        console.error('Error updating sheet:', error);
-                        alert('An error occurred');
+                        this.showToast('Network error', 'error');
+                    } finally {
+                        this.isSavingSheet = false;
+                    }
+                },
+
+                async toggleActive() {
+                    const newStatus = !this.user.active;
+                    try {
+                        const response = await fetch(`/api/users/${this.user.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ active: newStatus })
+                        });
+                        if (response.ok) {
+                            this.user.active = newStatus;
+                            this.showToast(newStatus ? 'System resumed' : 'System paused');
+                        } else {
+                            this.showToast('Failed to toggle status', 'error');
+                        }
+                    } catch (error) {
+                        this.showToast('Network error', 'error');
                     }
                 },
 
@@ -238,11 +229,11 @@
                     window.location.href = '/api/onboarding/connect-google';
                 },
 
-                showSuccess(message) {
-                    this.successMessage = message;
-                    setTimeout(() => {
-                        this.successMessage = '';
-                    }, 3000);
+                showToast(message, type = 'success') {
+                    this.toast.message = message;
+                    this.toast.type = type;
+                    this.toast.visible = true;
+                    setTimeout(() => { this.toast.visible = false; }, 3000);
                 },
 
                 logout() {
@@ -253,4 +244,3 @@
     </script>
 </body>
 </html>
-

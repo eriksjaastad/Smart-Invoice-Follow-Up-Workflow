@@ -208,6 +208,6 @@ def verify_make_api_key(authorization: Optional[str] = Header(None)) -> None:
         raise HTTPException(status_code=401, detail="Invalid Authorization header format")
 
     api_key = parts[1]
-    if api_key != settings.make_webhook_api_key:
+    if api_key != settings.x_make_api_key:
         raise HTTPException(status_code=401, detail="Invalid API key")
 

@@ -3,156 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billing - Smart Invoice</title>
+    <title>Billing & Plan | Smart Invoice</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
-    <!-- htmx -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="bg-gray-50" x-data="billing()">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+<body class="bg-slate-50 text-slate-900" x-data="billing()" x-cloak>
+    
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-24 items-center">
                 <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-blue-600">Smart Invoice</h1>
+                    <img src="/images/logo.png" alt="Smart Invoice" class="h-16 w-auto object-contain mix-blend-multiply">
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/dashboard.html" class="text-gray-700 hover:text-blue-600">Dashboard</a>
-                    <a href="/settings.html" class="text-gray-700 hover:text-blue-600">Settings</a>
-                    <button @click="logout()" class="text-gray-700 hover:text-blue-600 font-medium">Logout</button>
+                <div class="flex items-center space-x-6">
+                    <a href="/dashboard.html" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Dashboard</a>
+                    <a href="/settings.html" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Settings</a>
+                    <div class="h-4 w-px bg-slate-200"></div>
+                    <button @click="logout()" class="text-sm font-medium text-slate-600 hover:text-red-600 transition-colors">Log out</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
         <!-- Loading State -->
-        <div x-show="loading" class="text-center py-12">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p class="text-gray-600">Loading billing information...</p>
+        <div x-show="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-slate-500 font-medium">Loading your plan details...</p>
         </div>
 
-        <!-- Billing Content -->
-        <div x-show="!loading">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8">Billing & Subscription</h2>
+        <div x-show="!loading" class="space-y-8">
+            
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-slate-900">Billing & Plan</h1>
+                <p class="text-slate-500 mt-1">Manage your subscription and upgrade options.</p>
+            </div>
 
-            <!-- Current Plan -->
-            <div class="bg-white rounded-lg shadow p-6 mb-8">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Current Plan</h3>
-                <div class="flex items-center justify-between">
+            <!-- Current Plan Overview -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                     <div>
-                        <p class="text-2xl font-bold text-gray-900" x-text="user.plan === 'paid' ? 'Pro Plan' : 'Free Plan'"></p>
-                        <p class="text-gray-600 mt-1" x-text="user.plan === 'paid' ? '$15/month - Up to 100 invoices' : '$0/month - Up to 3 invoices'"></p>
-                        <p x-show="user.plan === 'paid'" class="text-sm text-gray-500 mt-2">
-                            Status: <span class="font-medium" x-text="billingStatus.status || 'Active'"></span>
-                        </p>
+                        <p class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Current Plan</p>
+                        <div class="flex items-baseline gap-3">
+                            <h2 class="text-3xl font-extrabold text-slate-900 capitalize" x-text="user.plan"></h2>
+                            <span class="text-slate-500" x-text="user.plan === 'paid' ? '$15/month' : '$0/month'"></span>
+                        </div>
+                        <p class="text-sm text-slate-600 mt-2" x-text="user.plan === 'paid' ? 'You can track up to 100 active overdue invoices.' : 'You can track up to 3 active overdue invoices.'"></p>
                     </div>
-                    <div>
-                        <span x-show="user.plan === 'paid'" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            Active
-                        </span>
-                        <span x-show="user.plan === 'free'" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                            Free
+
+                    <div x-show="user.plan === 'paid'">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Subscription Active
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Upgrade Section (Free Users) -->
-            <div x-show="user.plan === 'free'" class="mb-8">
-                <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-8 text-white">
-                    <h3 class="text-2xl font-bold mb-4">Upgrade to Pro</h3>
-                    <p class="text-blue-100 mb-6">
-                        Unlock the full power of Smart Invoice and track up to 100 invoices with automated follow-ups.
-                    </p>
-                    
-                    <div class="grid md:grid-cols-2 gap-6 mb-6">
-                        <div class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <div>
-                                <p class="font-semibold">100 Invoice Limit</p>
-                                <p class="text-sm text-blue-100">Track up to 100 invoices (vs 3 on free)</p>
+            <!-- Upgrade Banner (For Free Users) -->
+            <div x-show="user.plan === 'free'" class="bg-slate-900 rounded-2xl shadow-xl overflow-hidden relative border border-slate-800">
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+                
+                <div class="p-8 sm:p-10 relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold text-white mb-3">Time to upgrade?</h3>
+                        <p class="text-slate-300 leading-relaxed max-w-lg mb-6">
+                            The Pro plan unlocks automated follow-ups for up to 100 active overdue invoices per month, plus weekly performance digests.
+                        </p>
+                        <div class="flex items-center gap-6">
+                            <div class="flex items-center gap-2 text-slate-200 text-sm">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                100 Invoices
                             </div>
-                        </div>
-                        <div class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <div>
-                                <p class="font-semibold">Weekly Digest Emails</p>
-                                <p class="text-sm text-blue-100">Get weekly summaries of your collections</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <div>
-                                <p class="font-semibold">6-Stage Follow-Up</p>
-                                <p class="text-sm text-blue-100">Automated escalation at 7, 14, 21, 28, 35, 42 days</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-3 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <div>
-                                <p class="font-semibold">Error Notifications</p>
-                                <p class="text-sm text-blue-100">Get alerted when issues occur</p>
+                            <div class="flex items-center gap-2 text-slate-200 text-sm">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Weekly Digests
                             </div>
                         </div>
                     </div>
-
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-3xl font-bold">$15<span class="text-lg font-normal text-blue-100">/month</span></p>
-                            <p class="text-sm text-blue-100">Cancel anytime</p>
-                        </div>
-                        <button @click="upgradeToPro()" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-                            Upgrade Now
+                    
+                    <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center w-full md:w-auto">
+                        <div class="text-3xl font-extrabold text-white mb-1">$15<span class="text-sm font-medium text-slate-300">/mo</span></div>
+                        <p class="text-xs text-slate-400 mb-4">Cancel anytime</p>
+                        <button @click="upgradeToPro()" :disabled="isProcessing" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2">
+                            <span x-show="!isProcessing">Upgrade to Pro</span>
+                            <div x-show="isProcessing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Manage Subscription (Paid Users) -->
-            <div x-show="user.plan === 'paid'" class="bg-white rounded-lg shadow p-6 mb-8">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Manage Subscription</h3>
-                <p class="text-gray-600 mb-4">
-                    Manage your subscription, update payment method, or view billing history through the Stripe customer portal.
-                </p>
-                <button @click="openCustomerPortal()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
-                    Manage Billing
+            <!-- Manage Stripe Portal (For Pro Users) -->
+            <div x-show="user.plan === 'paid'" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8">
+                <div class="flex items-start gap-4 mb-6">
+                    <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center border border-indigo-100 flex-shrink-0">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Manage Subscription</h3>
+                        <p class="text-sm text-slate-600 mt-1 leading-relaxed">
+                            Update your credit card on file, download past receipts, or cancel your subscription at any time securely via Stripe.
+                        </p>
+                    </div>
+                </div>
+                
+                <button @click="openCustomerPortal()" :disabled="isProcessing" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2.5 px-6 rounded-xl transition-colors border border-slate-300 shadow-sm disabled:opacity-50">
+                    Open Billing Portal
                 </button>
             </div>
 
-            <!-- Billing History (Paid Users) -->
-            <div x-show="user.plan === 'paid'" class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Billing Information</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between py-2 border-b border-gray-200">
-                        <span class="text-gray-600">Subscription Status</span>
-                        <span class="font-medium text-gray-900" x-text="billingStatus.status || 'Active'"></span>
-                    </div>
-                    <div x-show="billingStatus.current_period_end" class="flex justify-between py-2 border-b border-gray-200">
-                        <span class="text-gray-600">Next Billing Date</span>
-                        <span class="font-medium text-gray-900" x-text="formatDate(billingStatus.current_period_end)"></span>
-                    </div>
-                    <div class="flex justify-between py-2">
-                        <span class="text-gray-600">Amount</span>
-                        <span class="font-medium text-gray-900">$15.00 / month</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </main>
 
@@ -160,49 +131,26 @@
         function billing() {
             return {
                 user: {},
-                billingStatus: {},
                 loading: true,
+                isProcessing: false,
 
                 async init() {
-                    await this.loadUser();
-                    if (this.user.plan === 'paid') {
-                        await this.loadBillingStatus();
-                    }
-                },
-
-                async loadUser() {
                     try {
-                        const response = await fetch('/api/auth/me', {
-                            credentials: 'include'
-                        });
-                        
+                        const response = await fetch('/api/auth/me', { credentials: 'include' });
                         if (response.ok) {
                             this.user = await response.json();
                         } else {
                             window.location.href = '/login.html';
                         }
                     } catch (error) {
-                        console.error('Error loading user:', error);
+                        console.error('Failed to load user', error);
                     } finally {
                         this.loading = false;
                     }
                 },
 
-                async loadBillingStatus() {
-                    try {
-                        const response = await fetch('/api/billing/status', {
-                            credentials: 'include'
-                        });
-                        
-                        if (response.ok) {
-                            this.billingStatus = await response.json();
-                        }
-                    } catch (error) {
-                        console.error('Error loading billing status:', error);
-                    }
-                },
-
                 async upgradeToPro() {
+                    this.isProcessing = true;
                     try {
                         const response = await fetch('/api/billing/create-checkout', {
                             method: 'POST',
@@ -216,18 +164,20 @@
                         
                         if (response.ok) {
                             const data = await response.json();
-                            // Redirect to Stripe Checkout
                             window.location.href = data.checkout_url;
                         } else {
-                            alert('Failed to create checkout session. Please try again.');
+                            alert('Stripe integration is not fully configured locally.');
                         }
                     } catch (error) {
-                        console.error('Error creating checkout session:', error);
-                        alert('An error occurred. Please try again.');
+                        console.error('Error creating checkout:', error);
+                        alert('Could not start checkout process.');
+                    } finally {
+                        this.isProcessing = false;
                     }
                 },
 
                 async openCustomerPortal() {
+                    this.isProcessing = true;
                     try {
                         const response = await fetch('/api/billing/customer-portal', {
                             method: 'POST',
@@ -236,21 +186,15 @@
                         
                         if (response.ok) {
                             const data = await response.json();
-                            // Redirect to Stripe Customer Portal
                             window.location.href = data.portal_url;
                         } else {
-                            alert('Failed to open customer portal. Please try again.');
+                            alert('Customer portal is not available.');
                         }
                     } catch (error) {
-                        console.error('Error opening customer portal:', error);
-                        alert('An error occurred. Please try again.');
+                        console.error('Error opening portal:', error);
+                    } finally {
+                        this.isProcessing = false;
                     }
-                },
-
-                formatDate(timestamp) {
-                    if (!timestamp) return 'N/A';
-                    const date = new Date(timestamp * 1000);
-                    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                 },
 
                 logout() {
@@ -261,4 +205,3 @@
     </script>
 </body>
 </html>
-

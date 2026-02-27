@@ -2,7 +2,9 @@
   "scaffolding_version": "1.0.0",
   "applied_at": "2026-01-27T11:07:48.053373",
   "rules_version": "1.0.0",
-  "rules_synced_at": "2026-02-15T12:15:50.985650",
-  "governance_version": "1.3",
-  "governance_synced_at": "2026-02-15T14:59:15.704197"
+  "rules_synced_at": "2026-02-21T22:42:35.603815",
+  "governance_version": "0.0.0",
+  "governance_synced_at": "2026-02-21T22:47:02.933097",
+  "agents_md_version": "2026.02.21",
+  "agents_md_synced_at": "2026-02-21T23:00:22.157446"
 }

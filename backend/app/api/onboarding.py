@@ -138,7 +138,8 @@ async def list_sheets(
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 settings.make_list_sheets_webhook_url,
-                json={"user_id": str(current_user.id)}
+                json={"user_id": str(current_user.id)},
+                headers={"x-make-apikey": settings.x_make_api_key}
             )
             response.raise_for_status()
 
@@ -214,7 +215,8 @@ async def validate_sheet(
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 settings.make_validate_sheet_webhook_url,
-                json={"sheet_id": request.sheet_id}
+                json={"sheet_id": request.sheet_id},
+                headers={"x-make-apikey": settings.x_make_api_key}
             )
             response.raise_for_status()
 
@@ -318,7 +320,8 @@ async def create_template_sheet(
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 settings.make_create_template_webhook_url,
-                json={"user_id": str(current_user.id)}
+                json={"user_id": str(current_user.id)},
+                headers={"x-make-apikey": settings.x_make_api_key}
             )
             response.raise_for_status()
 

@@ -3,157 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Smart Invoice</title>
+    <title>Dashboard | Smart Invoice</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
-    <!-- htmx -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="bg-gray-50" x-data="dashboard()">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-blue-600">Smart Invoice</h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-700" x-text="user.name || 'Loading...'"></span>
-                    <a href="/settings.html" class="text-gray-700 hover:text-blue-600">Settings</a>
-                    <button @click="logout()" class="text-gray-700 hover:text-blue-600 font-medium">Logout</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Loading State -->
-        <div x-show="loading" class="text-center py-12">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p class="text-gray-600">Loading your dashboard...</p>
-        </div>
-
-        <!-- Dashboard Content -->
-        <div x-show="!loading && user.id">
-            <!-- Welcome Section -->
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome back, <span x-text="user.name"></span>!</h2>
-                <p class="text-gray-600">Here's your invoice collection status for <strong x-text="user.business_name"></strong></p>
-            </div>
-
-            <!-- Setup Status -->
-            <div x-show="!user.sheet_id" class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-6">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
+<body class="bg-slate-50 text-slate-900" x-data="dashboard()" x-init="init()" x-cloak>
+    
+        <!-- Top Navigation -->
+            <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-24 items-center">
+                        <div class="flex items-center">
+                            <img src="/images/logo.png" alt="Smart Invoice" class="h-16 w-auto object-contain mix-blend-multiply">
+                        </div>
+        
+                    <div class="flex items-center space-x-6">
+                        <span class="text-sm font-medium text-slate-500 hidden md:block" x-text="user.name || 'Loading...'"></span>
+                        <a href="/settings.html" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Settings</a>
+                        <a href="/billing.html" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Billing</a>
+                        <div class="h-4 w-px bg-slate-200"></div>
+                        <button @click="logout()" class="text-sm font-medium text-slate-600 hover:text-red-600 transition-colors">Log out</button>
                     </div>
-                    <div class="ml-3">
-                        <h3 class="text-lg font-medium text-yellow-800">Setup Required</h3>
-                        <p class="text-yellow-700 mt-2">You need to complete the onboarding process to start collecting invoices.</p>
-                        <a href="/onboarding.html" class="inline-block mt-4 bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
-                            Complete Setup →
+                </div>
+            </div>
+        </nav>
+    
+        <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            
+            <!-- Loading State -->
+            <div x-show="loading" class="flex flex-col items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-slate-500 font-medium">Checking system status...</p>
+            </div>
+    
+            <div x-show="!loading && user.id">
+                
+                <!-- Page Header -->
+                <div class="mb-8 flex justify-between items-end">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
+                        <p class="text-slate-500 mt-1">Overview of your automated dispatch system for <strong class="text-slate-700" x-text="user.business_name"></strong></p>
+                    </div>
+    
+                        <!-- Mock Indicator -->
+                        <div x-show="user.email === 'mock.user@example.com'" class="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse">
+                            Mock Auth Active
+                        </div>
+                    </div>
+                        <!-- Setup Required Warning -->
+            <div x-show="!user.sheet_id" class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                    <div class="bg-amber-100 p-2 rounded-lg text-amber-600 mt-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-amber-800">Setup is incomplete</h3>
+                        <p class="text-amber-700 text-sm mt-1">You need to connect your Google Sheet to start automating your follow-ups.</p>
+                    </div>
+                </div>
+                <a href="/onboarding.html" class="bg-amber-500 hover:bg-amber-600 text-white font-medium px-5 py-2.5 rounded-lg transition-colors shadow-sm whitespace-nowrap">
+                    Complete Setup
+                </a>
+            </div>
+
+            <!-- "Heartbeat" Status UI -->
+            <div x-show="user.sheet_id" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8">
+                
+                <!-- System Status Header -->
+                <div class="p-6 md:p-8" :class="user.active ? 'bg-emerald-50/50' : 'bg-slate-50/50'">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        
+                        <div class="flex items-center gap-4">
+                            <!-- Pulsing dot for active status -->
+                            <div class="relative flex h-5 w-5" x-show="user.active">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 border-2 border-white shadow-sm"></span>
+                            </div>
+                            <!-- Grey dot for paused -->
+                            <div class="relative flex h-5 w-5" x-show="!user.active">
+                                <span class="relative inline-flex rounded-full h-5 w-5 bg-slate-400 border-2 border-white shadow-sm"></span>
+                            </div>
+
+                            <div>
+                                <h2 class="text-xl font-bold" :class="user.active ? 'text-emerald-900' : 'text-slate-700'">
+                                    <span x-text="user.active ? 'System Active & Monitoring' : 'System Paused'"></span>
+                                </h2>
+                                <p class="text-sm mt-1" :class="user.active ? 'text-emerald-700' : 'text-slate-500'">
+                                    <span x-show="user.active">We are silently checking your sheet every day.</span>
+                                    <span x-show="!user.active">We have stopped checking your sheet. Go to Settings to reactivate.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Last Check Indicator -->
+                        <div class="bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm text-sm text-slate-600 flex items-center gap-3">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div>
+                                <span class="block text-xs text-slate-400 font-medium uppercase tracking-wider">Last Sheet Check</span>
+                                <span class="font-medium text-slate-800" x-text="formatDate(user.last_run_at)"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100 border-t border-slate-100">
+                    
+                    <div class="p-6">
+                        <p class="text-sm font-medium text-slate-500 mb-1">Your Current Plan</p>
+                        <div class="flex items-end gap-2">
+                            <span class="text-2xl font-bold text-slate-900 capitalize" x-text="user.plan"></span>
+                            <span class="text-sm text-slate-400 font-medium mb-1 border px-2 py-0.5 rounded-md" x-text="user.plan === 'paid' ? '100 invoices/mo' : '3 invoices/mo'"></span>
+                        </div>
+                        <a x-show="user.plan === 'free'" href="/billing.html" class="inline-block mt-3 text-sm font-medium text-blue-600 hover:text-blue-700">Upgrade to unlock more →</a>
+                    </div>
+
+                    <div class="p-6">
+                        <p class="text-sm font-medium text-slate-500 mb-1">Gmail Drafts Action</p>
+                        <p class="text-slate-800 text-sm leading-relaxed">
+                            When we find an overdue invoice, we create a draft email in your Gmail. <strong>We never send emails on your behalf.</strong>
+                        </p>
+                        <a href="https://mail.google.com/mail/u/0/#drafts" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-600 hover:text-blue-700">
+                            Check Gmail Drafts
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         </a>
                     </div>
+
+                    <div class="p-6">
+                        <p class="text-sm font-medium text-slate-500 mb-1">Weekly Digest</p>
+                        <p class="text-slate-800 text-sm leading-relaxed">
+                            Expect an email summary every Monday detailing how many follow-ups were generated.
+                        </p>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div x-show="user.sheet_id" class="grid md:grid-cols-3 gap-6 mb-6">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
-                            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Plan</p>
-                            <p class="text-2xl font-semibold text-gray-900" x-text="user.plan === 'paid' ? 'Pro' : 'Free'"></p>
-                        </div>
+            <!-- Quick Links -->
+            <div x-show="user.sheet_id" class="grid md:grid-cols-2 gap-4">
+                <a href="/settings.html" class="group bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex items-center gap-4">
+                    <div class="bg-slate-50 p-3 rounded-lg group-hover:bg-blue-50 group-hover:text-blue-600 text-slate-400 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </div>
-                </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">App Settings</h4>
+                        <p class="text-sm text-slate-500">Update sender name or change Google Sheet</p>
+                    </div>
+                </a>
 
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
-                            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Status</p>
-                            <p class="text-2xl font-semibold text-gray-900" x-text="user.active ? 'Active' : 'Inactive'"></p>
-                        </div>
+                <a href="/billing.html" class="group bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex items-center gap-4">
+                    <div class="bg-slate-50 p-3 rounded-lg group-hover:bg-blue-50 group-hover:text-blue-600 text-slate-400 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
-                            <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Invoice Limit</p>
-                            <p class="text-2xl font-semibold text-gray-900" x-text="user.plan === 'paid' ? '100' : '3'"></p>
-                        </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Billing & Plan</h4>
+                        <p class="text-sm text-slate-500">Manage subscription or update payment</p>
                     </div>
-                </div>
+                </a>
             </div>
 
-            <!-- Quick Actions -->
-            <div x-show="user.sheet_id" class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                    <a href="/settings.html" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-                        <svg class="h-6 w-6 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <div>
-                            <p class="font-medium text-gray-900">Account Settings</p>
-                            <p class="text-sm text-gray-600">Update your profile and preferences</p>
-                        </div>
-                    </a>
-                    <a href="/billing.html" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50" x-show="user.plan === 'free'">
-                        <svg class="h-6 w-6 text-gray-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                        </svg>
-                        <div>
-                            <p class="font-medium text-gray-900">Upgrade to Pro</p>
-                            <p class="text-sm text-gray-600">Track up to 100 invoices for $15/month</p>
-                        </div>
-                    </a>
-                </div>
-            </div>
         </div>
 
-        <!-- Error State -->
-        <div x-show="!loading && !user.id" class="bg-red-50 border-l-4 border-red-400 p-6">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-6 w-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <h3 class="text-lg font-medium text-red-800">Authentication Error</h3>
-                    <p class="text-red-700 mt-2">Unable to load your account. Please try logging in again.</p>
-                    <a href="/login.html" class="inline-block mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-                        Login Again
-                    </a>
-                </div>
-            </div>
-        </div>
     </main>
 
     <script>
@@ -163,24 +186,36 @@
                 loading: true,
 
                 async init() {
-                    await this.loadUser();
-                },
-
-                async loadUser() {
                     try {
-                        const response = await fetch('/api/auth/me', {
-                            credentials: 'include'
-                        });
-                        
+                        const response = await fetch('/api/auth/me', { credentials: 'include' });
                         if (response.ok) {
                             this.user = await response.json();
                         } else {
-                            console.error('Failed to load user');
+                            window.location.href = '/login.html';
                         }
                     } catch (error) {
-                        console.error('Error loading user:', error);
+                        console.error('Failed to load user', error);
+                        window.location.href = '/login.html';
                     } finally {
                         this.loading = false;
+                    }
+                },
+
+                formatDate(dateString) {
+                    if (!dateString) return 'Waiting for first check...';
+                    
+                    const date = new Date(dateString);
+                    const now = new Date();
+                    const diffMs = now - date;
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    
+                    // Simple relative formatting
+                    if (diffDays === 0) {
+                        return `Today at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    } else if (diffDays === 1) {
+                        return `Yesterday at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    } else {
+                        return date.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
                     }
                 },
 
@@ -192,4 +227,3 @@
     </script>
 </body>
 </html>
-

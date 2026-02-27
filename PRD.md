@@ -136,6 +136,24 @@ Solutions exist (accounting software, collection agencies) but they're too compl
 
 **No invoice data stored on our side.** The Google Sheet is the source of truth. We read it, act on it, and log what we did. Privacy-friendly.
 
+**Google Sheet Column Schema (LOCKED — v1)**
+
+This is the canonical column layout for the Invoice Tracker sheet. All Make.com scenarios (Create Template, Daily Processing, Validate Sheet) depend on this exact order. Do NOT add, remove, or reorder columns without updating all scenarios.
+
+| Column | Index | Header | Type | Required | Description |
+|--------|-------|--------|------|----------|-------------|
+| A | 0 | `Invoice_Number` | Text | Yes | Unique invoice identifier |
+| B | 1 | `Client_Name` | Text | Yes | Client display name |
+| C | 2 | `Client_Email` | Email | Yes | Email for draft reminders |
+| D | 3 | `Amount` | Number | Yes | Invoice amount (no $ or commas) |
+| E | 4 | `Due_Date` | Date | Yes | Payment due date (YYYY-MM-DD) |
+| F | 5 | `Sent_Date` | Date | Yes | When invoice was originally sent |
+| G | 6 | `Paid` | Boolean | Yes | `TRUE` or `FALSE` |
+| H | 7 | `Last_Stage_Sent` | Number | Auto | Escalation tier (7/14/21/28/35/42) |
+| I | 8 | `Last_Sent_At` | Date | Auto | Date last draft was created |
+
+Custom column mapping is a v2 feature. For MVP, the sheet must match this exact layout.
+
 ---
 
 ## Functional Requirements
@@ -312,6 +330,8 @@ Scopes requested by Make.com:
 
 ## Timeline
 
+### Original Estimate (Feb 2026)
+
 | Phase | Duration | What |
 |-------|----------|------|
 | **Design** | 2 days | Database schema, API routes, Make.com scenario design, deploy target |
@@ -323,7 +343,23 @@ Scopes requested by Make.com:
 | **Distribution** | 2 days | Product Hunt, Reddit, LinkedIn posts |
 | **Total** | ~2.5 weeks | |
 
-**Note:** SIW development starts week of Feb 17 (after AI character creation deadline).
+**Original start:** Week of Feb 17. **Original ship target:** ~March 1.
+
+### Revised Timeline (Updated 2026-02-27)
+
+Design, core build, frontend, and payment phases are complete. Accounts (Auth0, Stripe, Resend, Make.com) are set up. Make.com has 2 of 4 scenarios working. What remains is bug fixes, deploy, and testing.
+
+| Phase | Target Date | What | Status |
+|-------|-------------|------|--------|
+| **Bug fixes** | Feb 28 - Mar 2 | auth.py fix (#4953), kill switch (#4823), Make.com POST URL (#4945) | In Progress |
+| **Deploy** | Mar 3 - 4 | Vercel deploy (#4779), DNS, env vars, update Make.com POST URL | Not Started |
+| **E2E Testing** | Mar 5 - 6 | Full signup → sheet → drafts → payment flow (#4778) | Not Started |
+| **Ship** | Mar 7 | Smoke test, monitoring live, kill switch verified | Target |
+| **Distribution** | Mar 8 - 9 | Product Hunt, Reddit, LinkedIn (#4780) | Not Started |
+
+**Revised ship target:** March 7, 2026 (1 week slip from original).
+
+**Operational tracking:** See `SHIP_CHECKLIST.md` for current state, env vars, deploy sequence, and step-by-step ship instructions.
 
 ### Go/No-Go Gates (Added 2026-02-15)
 

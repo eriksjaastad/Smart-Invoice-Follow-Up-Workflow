@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "smart-invoice-workflow",
   "builds": [
     {
       "src": "backend/app/main.py",
@@ -21,6 +20,10 @@
       "dest": "backend/app/main.py"
     },
     {
+      "src": "/ping",
+      "dest": "backend/app/main.py"
+    },
+    {
       "src": "/static/(.*)",
       "dest": "/static/$1"
     },
@@ -33,9 +36,11 @@
       "dest": "/static/index.html"
     }
   ],
-  "env": {
-    "PYTHON_VERSION": "3.11"
-  },
+  "crons": [
+    {
+      "path": "/api/cron/trigger-daily",
+      "schedule": "0 15 * * *"
+    }
+  ],
   "regions": ["iad1"]
 }
-

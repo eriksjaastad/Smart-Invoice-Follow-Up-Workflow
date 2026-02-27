@@ -3,169 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Invoice - Automated Invoice Collection</title>
+    <title>Smart Invoice | Stop Chasing Invoices</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- htmx -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-slate-50 text-slate-900 selection:bg-blue-100">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-32 items-center">
                 <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-blue-600">Smart Invoice</h1>
+                    <img src="/images/logo.png" alt="Smart Invoice" class="h-24 w-auto object-contain">
                 </div>
                 <div>
-                    <a href="/login.html" class="text-gray-700 hover:text-blue-600 font-medium">Login</a>
+                    <a href="/login.html" class="text-slate-600 hover:text-slate-900 font-medium px-4 py-2 transition-colors">Log In</a>
+                    <a href="/login.html" class="ml-2 bg-slate-900 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm">Start Free</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="py-20 px-4">
+    <section class="py-24 px-4 bg-white">
         <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-5xl font-bold text-gray-900 mb-6">
-                Never Chase Invoices Again
-            </h2>
-            <p class="text-xl text-gray-600 mb-8">
-                Automated invoice collection that sends perfectly-timed follow-ups to your clients. 
-                Set it up once, and let Smart Invoice handle the rest.
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium mb-8 border border-blue-100">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                Automated invoice dispatch
+            </div>
+            
+            <h1 class="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
+                Automate your invoice <br><span class="text-blue-600">dispatch & follow-up.</span>
+            </h1>
+            <p class="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Connect your Google Sheet and let us handle the heavy lifting. We dispatch your invoices and perfectly-timed follow-ups directly to your clients via Gmail.
             </p>
-            <a href="/login.html" class="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition">
-                Get Started Free
-            </a>
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <a href="/login.html" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Start Your Free Trial
+                </a>
+                <p class="text-sm text-slate-500 mt-3 sm:mt-0 sm:ml-4">No credit card required. Free for 3 invoices/mo.</p>
+            </div>
         </div>
     </section>
 
-    <!-- Value Proposition -->
-    <section class="py-16 px-4 bg-white">
+    <!-- How It Works (Trust & Transparency focus) -->
+    <section class="py-24 px-4 bg-slate-50 border-t border-slate-100">
         <div class="max-w-6xl mx-auto">
-            <h3 class="text-3xl font-bold text-center text-gray-900 mb-12">How It Works</h3>
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">How it works (The invisible assistant)</h2>
+                <p class="text-slate-600 max-w-2xl mx-auto text-lg">We designed this for non-technical business owners. No complex software, no new tools to learn. It just works behind the scenes.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-10">
                 <!-- Step 1 -->
-                <div class="text-center">
-                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
+                    <div class="bg-blue-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6 border border-blue-100">
+                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                     </div>
-                    <h4 class="text-xl font-semibold text-gray-900 mb-2">Connect Your Google Sheet</h4>
-                    <p class="text-gray-600">
-                        Keep your invoices in a simple Google Sheet. We'll check it daily for overdue invoices.
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">1. Connect Your Sheet</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        Securely connect the Google Spreadsheet where you currently track your invoices. We only ask for the permissions we strictly need.
                     </p>
                 </div>
 
                 <!-- Step 2 -->
-                <div class="text-center">
-                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
+                    <div class="bg-emerald-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6 border border-emerald-100">
+                        <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <h4 class="text-xl font-semibold text-gray-900 mb-2">Automated Follow-Ups</h4>
-                    <p class="text-gray-600">
-                        We create professional email drafts at the perfect time (7, 14, 21, 28, 35, and 42 days overdue).
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">2. We Check Daily</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        Every single day, our system silently checks your sheet for overdue invoices. We automatically calculate the right time and tone for follow-ups.
                     </p>
                 </div>
 
                 <!-- Step 3 -->
-                <div class="text-center">
-                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
+                    <div class="bg-indigo-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6 border border-indigo-100">
+                        <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
                     </div>
-                    <h4 class="text-xl font-semibold text-gray-900 mb-2">Review & Send</h4>
-                    <p class="text-gray-600">
-                        Email drafts appear in your Gmail. Review, customize if needed, and send with one click.
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">3. You Review & Send</h3>
+                    <p class="text-slate-600 leading-relaxed">
+                        We don't send emails automatically (to protect your client relationships). We create Drafts in your Gmail. You review them and click "Send".
                     </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section class="py-16 px-4">
+    <!-- Value Proposition / "Set it and forget it" -->
+    <section class="py-24 px-4 bg-white border-t border-slate-100">
         <div class="max-w-5xl mx-auto">
-            <h3 class="text-3xl font-bold text-center text-gray-900 mb-12">Simple, Transparent Pricing</h3>
+            <div class="bg-slate-900 rounded-3xl p-10 md:p-16 text-center text-white shadow-xl relative overflow-hidden">
+                <!-- Abstract background shape -->
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+                <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+                
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 relative z-10">We send the weekly summary. <br>You relax.</h2>
+                <p class="text-lg text-slate-300 mb-10 max-w-2xl mx-auto relative z-10">
+                    To give you peace of mind that the system is working, we send you a quick summary email every Monday. It shows how many drafts we created and your total outstanding amount. No need to log into a dashboard.
+                </p>
+                <div class="relative z-10">
+                    <a href="/login.html" class="inline-block bg-white text-slate-900 px-8 py-3 rounded-xl font-semibold hover:bg-slate-50 transition-colors">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="py-24 px-4 bg-slate-50 border-t border-slate-100" id="pricing">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Simple, Transparent Pricing</h2>
+                <p class="text-slate-600 text-lg">Pay only when you have a high volume of invoices.</p>
+            </div>
+            
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <!-- Free Tier -->
-                <div class="bg-white rounded-lg shadow-lg p-8 border-2 border-gray-200">
-                    <h4 class="text-2xl font-bold text-gray-900 mb-2">Free</h4>
-                    <div class="mb-6">
-                        <span class="text-4xl font-bold text-gray-900">$0</span>
-                        <span class="text-gray-600">/month</span>
+                <div class="bg-white rounded-2xl shadow-sm p-8 border border-slate-200 flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Free</h3>
+                    <p class="text-slate-500 text-sm mb-6">Perfect for independent freelancers</p>
+                    <div class="mb-6 flex items-baseline gap-1">
+                        <span class="text-4xl font-extrabold text-slate-900">$0</span>
+                        <span class="text-slate-500 font-medium">/month</span>
                     </div>
-                    <ul class="space-y-3 mb-8">
-                        <li class="flex items-start">
-                            <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span class="text-gray-700">Up to 3 invoices</span>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-start gap-3 text-slate-600">
+                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Up to 3 active overdue invoices
                         </li>
-                        <li class="flex items-start">
-                            <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span class="text-gray-700">Daily automated checks</span>
+                        <li class="flex items-start gap-3 text-slate-600">
+                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Daily automated checks
                         </li>
-                        <li class="flex items-start">
-                            <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span class="text-gray-700">6-stage follow-up sequence</span>
+                        <li class="flex items-start gap-3 text-slate-600">
+                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Full 6-stage follow-up sequence
                         </li>
                     </ul>
-                    <a href="/login.html" class="block w-full text-center bg-gray-200 text-gray-900 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
-                        Start Free
+                    <a href="/login.html" class="block w-full text-center bg-slate-100 text-slate-900 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
+                        Start for Free
                     </a>
                 </div>
 
-                <!-- Paid Tier -->
-                <div class="bg-blue-600 rounded-lg shadow-lg p-8 border-2 border-blue-700 relative">
-                    <div class="absolute top-0 right-0 bg-yellow-400 text-gray-900 px-3 py-1 rounded-bl-lg rounded-tr-lg text-sm font-bold">
-                        POPULAR
+                <!-- Pro Tier -->
+                <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-blue-500 relative flex flex-col transform md:-translate-y-2">
+                    <div class="absolute -top-4 inset-x-0 flex justify-center">
+                        <span class="bg-blue-500 text-white px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">Most Popular</span>
                     </div>
-                    <h4 class="text-2xl font-bold text-white mb-2">Pro</h4>
-                    <div class="mb-6">
-                        <span class="text-4xl font-bold text-white">$15</span>
-                        <span class="text-blue-200">/month</span>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Pro</h3>
+                    <p class="text-slate-500 text-sm mb-6">For agencies and small teams</p>
+                    <div class="mb-6 flex items-baseline gap-1">
+                        <span class="text-4xl font-extrabold text-slate-900">$15</span>
+                        <span class="text-slate-500 font-medium">/month</span>
                     </div>
-                    <ul class="space-y-3 mb-8">
-                        <li class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span class="text-white">Up to 100 invoices</span>
+                    <ul class="space-y-4 mb-8 flex-1">
+                        <li class="flex items-start gap-3 text-slate-600">
+                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span class="font-semibold text-slate-900">Up to 100 active overdue invoices</span>
                         </li>
-                        <li class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span class="text-white">Daily automated checks</span>
+                        <li class="flex items-start gap-3 text-slate-600">
+                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Daily automated checks
                         </li>
-                        <li class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span class="text-white">6-stage follow-up sequence</span>
+                        <li class="flex items-start gap-3 text-slate-600">
+                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Weekly performance digest email
                         </li>
-                        <li class="flex items-start">
-                            <svg class="w-6 h-6 text-blue-200 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span class="text-white">Weekly digest emails</span>
+                        <li class="flex items-start gap-3 text-slate-600">
+                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Priority email support
                         </li>
                     </ul>
-                    <a href="/login.html" class="block w-full text-center bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <a href="/login.html" class="block w-full text-center bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm">
                         Start Pro Trial
                     </a>
                 </div>
@@ -174,11 +205,18 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-8 px-4">
-        <div class="max-w-7xl mx-auto text-center">
-            <p>&copy; 2024 Smart Invoice. All rights reserved.</p>
+    <footer class="bg-white border-t border-slate-200 py-10 px-4">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2">
+                <img src="/images/logo.png" alt="Logo" class="h-6 w-auto grayscale opacity-50">
+                <p class="text-slate-500 text-sm">&copy; 2026 Synth Insight Labs. All rights reserved.</p>
+            </div>
+            <div class="flex gap-6 text-sm">
+                <a href="#" class="text-slate-500 hover:text-slate-900 transition-colors">Privacy Policy</a>
+                <a href="#" class="text-slate-500 hover:text-slate-900 transition-colors">Terms of Service</a>
+                <a href="mailto:support@synthinsightlabs.com" class="text-slate-500 hover:text-slate-900 transition-colors">Support</a>
+            </div>
         </div>
     </footer>
 </body>
 </html>
-

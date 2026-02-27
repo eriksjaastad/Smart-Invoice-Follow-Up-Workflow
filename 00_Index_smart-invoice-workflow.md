@@ -68,14 +68,17 @@ scaffolding_date: 2026-01-27
 | [Documents/](Documents/README.md) | 2 | *Auto-generated index. Last updated: 2026-01-24* |
 | [backend/](backend/) | 1 | No description available. |
 | [case-studies/](case-studies/) | 4 | No description available. |
+| [make-blueprints/](make-blueprints/) | 1 | No description available. |
 | [static/](static/) | 6 | No description available. |
 
 ### Files
 
 | File | Description |
 | :--- | :--- |
+| [2-23-read-this.md](2-23-read-this.md) | Quick Start for Tomorrow Morning |
 | [AGENTS.md](AGENTS.md) | > The single source of truth for hierarchy, workflow, and AI collaboration philosophy. |
 | [CLAUDE.md](CLAUDE.md) | **Python execution:** Never use `python` or `python3`. Always use `$HOME/.local/bin/uv run`. |
+| [Create Template Webhook.blueprint.json](Create Template Webhook.blueprint.json) | No description available. |
 | [DECISIONS.md](DECISIONS.md) | > *Documenting WHY we made decisions, not just WHAT we built.* |
 | [Documents/README.md](Documents/README.md) | *Auto-generated index. Last updated: 2026-01-24* |
 | [Documents/REVIEWS_AND_GOVERNANCE_PROTOCOL.md](Documents/REVIEWS_AND_GOVERNANCE_PROTOCOL.md) | This file is managed by sync_governance.py and will be OVERWRITTEN on the next sync. |
@@ -83,15 +86,23 @@ scaffolding_date: 2026-01-27
 | [Documents/make-blueprints/Integration HTTP, Google Sheets, Tools, Gmail.blueprint.json](Documents/make-blueprints/Integration HTTP, Google Sheets, Tools, Gmail.blueprint.json) | No description available. |
 | [Documents/patterns/code-review-standard.md](Documents/patterns/code-review-standard.md) | **Status:** Proven Pattern |
 | [Documents/patterns/learning-loop-pattern.md](Documents/patterns/learning-loop-pattern.md) | > **Purpose:** Guide for creating reinforcement learning cycles in any project |
-| [Documents/reference/GOOGLE_SHEET_TEMPLATE.md](Documents/reference/GOOGLE_SHEET_TEMPLATE.md) | Create a new Google Sheet with these exact column headers in row 1: |
 | [Documents/reference/LOCAL_MODEL_LEARNINGS.md](Documents/reference/LOCAL_MODEL_LEARNINGS.md) | > **Purpose:** Institutional memory for working with local AI models (Ollama) |
 | [Documents/reference/SALES_STRATEGY.md](Documents/reference/SALES_STRATEGY.md) | For people who hate sales but need to make money |
 | [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) | **Last Updated:** 2026-02-15 |
+| [Integration Webhooks, Google Drive.blueprint.json](Integration Webhooks, Google Drive.blueprint.json) | No description available. |
 | [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) | **Scope reminder (MVP firewall):** Ship only what supports **sign up → connect Google → pick sheet →... |
+| [MAKE_BUILDING_NOTES.md](MAKE_BUILDING_NOTES.md) | Lessons learned from building and importing SIW scenarios. Reference this before creating or debuggi... |
+| [Onboarding Webhook.blueprint.json](Onboarding Webhook.blueprint.json) | No description available. |
 | [PRD.md](PRD.md) | **Version:** 1.1 |
 | [PROPOSAL_FINAL.md](PROPOSAL_FINAL.md) | **Document Version:** 1.0 |
 | [README.md](README.md) | Hosted SaaS that automates invoice follow-up for small businesses. |
+| [REVIEWS_AND_GOVERNANCE_PROTOCOL.md](REVIEWS_AND_GOVERNANCE_PROTOCOL.md) | This file is managed by sync_governance.py and will be OVERWRITTEN on the next sync. |
 | [RUNBOOK.md](RUNBOOK.md) | This runbook is for **operating SIW safely** during MVP: diagnosing failures, preventing runaway beh... |
+| [SIW - Create Template.blueprint.json](SIW - Create Template.blueprint.json) | No description available. |
+| [SIW - Daily Processing.blueprint.json](SIW - Daily Processing.blueprint.json) | No description available. |
+| [SIW - Validate Sheet.blueprint.json](SIW - Validate Sheet.blueprint.json) | No description available. |
+| [Smart Invoice Workflow.blueprint.json](Smart Invoice Workflow.blueprint.json) | No description available. |
+| [Validate Sheet Webhook.blueprint.json](Validate Sheet Webhook.blueprint.json) | No description available. |
 | [backend/alembic/env.py](backend/alembic/env.py) | Alembic environment configuration for async SQLAlchemy |
 | [backend/alembic/script.py.mako](backend/alembic/script.py.mako) | No description available. |
 | [backend/alembic/versions/001_initial_schema.py](backend/alembic/versions/001_initial_schema.py) | Initial schema: users and job_history tables |
@@ -131,7 +142,9 @@ scaffolding_date: 2026-01-27
 | [case-studies/pricing-research.md](case-studies/pricing-research.md) | Since you’re looking at an automated invoice service, your pricing model is actually your biggest co... |
 | [email_autoresponder.json](email_autoresponder.json) | No description available. |
 | [main.py](main.py) | No description available. |
+| [make-blueprints/SIW_Create_Template_blueprint.json](make-blueprints/SIW_Create_Template_blueprint.json) | No description available. |
 | [pyproject.toml](pyproject.toml) | No description available. |
+| [skills-lock.json](skills-lock.json) | No description available. |
 | [static/billing.html](static/billing.html) | No description available. |
 | [static/dashboard.html](static/dashboard.html) | No description available. |
 | [static/index.html](static/index.html) | No description available. |
@@ -139,5 +152,6 @@ scaffolding_date: 2026-01-27
 | [static/onboarding.html](static/onboarding.html) | No description available. |
 | [static/settings.html](static/settings.html) | No description available. |
 | [uv.lock](uv.lock) | No description available. |
+| [vercel.json](vercel.json) | No description available. |
 
 <!-- LIBRARIAN-INDEX-END -->

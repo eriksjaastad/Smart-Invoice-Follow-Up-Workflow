@@ -1,9 +1,33 @@
-
 <!-- SCAFFOLD:START - Do not edit between markers -->
 # AGENTS.md - Ecosystem Constitution (SSOT)
 
 > The single source of truth for hierarchy, workflow, and AI collaboration philosophy.
 > This document is universal across all projects.
+> **Start here:** Read `README.md` first. The auto-generated section at the top has this project's purpose, entry points, and key commands.
+
+---
+
+## 🛡️ UNIVERSAL GOVERNANCE RULES
+
+### 1. The "Trash, Don't Delete" Policy
+- **Rule:** NEVER use `rm`, `unlink`, or `shred`. Permanent deletion is forbidden.
+- **Enforcement:** Use `trash <file>` (CLI) or `send2trash` (Python).
+- **No workarounds:** Do not use `find -delete` or other indirect deletion methods.
+- **Why:** Allows recovery from accidental deletions.
+- **If trash is missing:** STOP and ask the user.
+
+### 2. DNA Integrity (Portability)
+- **Rule:** NO hardcoded absolute paths (e.g., `/Users/erik/...`).
+- **Enforcement:** Use relative paths or environment variables.
+
+### 3. Security Sentinel
+- **Rule:** NEVER hard-code API keys or secrets.
+- **Enforcement:** Use project-specific `.env` files and `os.getenv()`.
+
+### 4. No Hook Bypass
+- **Rule:** NEVER use `--no-verify` or `-n` with git commit or push.
+- **Why:** Pre-commit hooks exist to catch security issues and code quality problems. Bypassing them defeats the entire safety system.
+- **Enforcement:** Fix the issue, don't bypass the hook.
 
 ---
 
@@ -29,13 +53,8 @@
 - **Current Model:** Claude or Gemini (as available)
 - **Tools:** Ollama MCP (`ollama_run`, `ollama_run_many`), Shell tool, File tools, Draft Gate.
 - **Constraint:** **STRICTLY PROHIBITED** from generating logic or writing code.
-- **Dispatch Protocol (MANDATORY):**
-  1. **FIRST:** Dispatch all coding tasks via Agent Hub: `$PROJECTS_ROOT/_tools/agent-hub/scripts/dispatch_task.py`
-  2. **IF Agent Hub fails** (timeout, model unavailable, error): Report the failure to the Conductor with the error details. Do NOT silently fall back to your own tools.
-  3. **ONLY with explicit Conductor approval:** Use your own sub-agents or built-in tools as a fallback mechanism.
-  4. **NEVER** write code yourself — not even one-liners, not even "simple" fixes. You do NOT have standing permission to use your own sub-agents for code generation.
 - **Mandate:**
-  1. **Dispatch:** Send coding tasks to Workers via Agent Hub (see Dispatch Protocol above).
+  1. **Relay:** Pass Super Manager prompts to Workers via MCP.
   2. **Execute File Ops:** Perform all file moves, copies, and shell commands as requested by the Conductor or as needed by the Worker's logic.
   3. **Context Bridge:** Provide necessary project context/files to Workers when requested.
   4. **Verify:** Inspect Worker output against the Checklist.
@@ -72,7 +91,7 @@
 
 1. **Drafting:** Super Manager writes a task prompt with **[ACCEPTANCE CRITERIA]** as a Markdown checklist
 2. **Handoff:** Super Manager passes the prompt to the Floor Manager
-3. **Dispatch:** Floor Manager dispatches to Worker via Agent Hub (`$PROJECTS_ROOT/_tools/agent-hub/scripts/dispatch_task.py`). NOT via own sub-agents.
+3. **Relay & Context:** Floor Manager executes via Worker, providing context as needed
 4. **Execution:** Worker generates the necessary code/logic changes. Floor Manager performs all file operations and command executions.
 5. **Inspection (The Guardrail):** Floor Manager must:
    - Read the modified/new files
@@ -83,7 +102,7 @@
    - **IF PASS:** Floor Manager issues official **"Floor Manager Sign-off"**
 7. **Finalization:** Task marked **Complete** only after Sign-off
 
-**CRITICAL RULE:** Only the **Workers** write code. Under no circumstances should the Super Manager or Floor Manager generate code snippets or implementation logic. Floor Manager must use Agent Hub for dispatch — never its own sub-agents — unless the Conductor explicitly approves a fallback.
+**CRITICAL RULE:** Only the **Workers** write code. Under no circumstances should the Super Manager or Floor Manager generate code snippets or implementation logic.
 
 ---
 
@@ -231,7 +250,7 @@ When a feature requires 3+ prompts, use **Staged Prompt Engineering**:
 - Break work into **Individual Prompts** (5-10 min each) with built-in verification
 - End with a **Verification Prompt** that tests all components together
 
-See: `agent-skills-library/playbooks/staged-prompt-engineering/` for templates.
+Claude Code skills for workflow phases are deployed to `~/.claude/skills/` and activate automatically.
 
 ---
 
@@ -258,10 +277,10 @@ See: `agent-skills-library/playbooks/staged-prompt-engineering/` for templates.
 ## 📔 JOURNAL ENTRY PROTOCOL (UNIVERSAL)
 
 **Location:** `{PROJECTS_ROOT}/ai-journal/entries/YYYY/`
-**Format:** `YYYY-MM-DDTHH-MM-SSZ__Claude 3.5 Sonnet-floor-manager__{descriptive-title}.md` (UTC)
+**Format:** `YYYY-MM-DDTHH-MM-SSZ__{model}-{role}__{descriptive-title}.md` (UTC)
 
 ### Role Identification
-Include your role in the filename `floor-manager` tag:
+Include your role in the filename `{role}` tag:
 - **super-manager:** Strategic oversight, high-fidelity planning
 - **floor-manager:** Implementation, debugging, tool execution
 - **worker:** Specific code generation, task completion
@@ -383,16 +402,16 @@ Every `.md` file should include:
 ```yaml
 ---
 tags:
-  - p/smart-invoice-workflow
+  - p/{{PROJECT_NAME}}
   - type/[pattern|template|tool|journal-entry]
   - domain/[relevant-domain]
 status: #status/[active|archived|draft]
-created: 2026-01-27
+created: {{DATE}}
 ---
 ```
 
 ### Tag Taxonomy
-- `#p/smart-invoice-workflow` — Project namespace
+- `#p/{{PROJECT_NAME}}` — Project namespace
 - `#type/[pattern|template|tool]` — Document type
 - `#domain/[meta|trading|image|etc]` — Subject domain
 - `#status/[active|archived]` — Current state
@@ -432,7 +451,16 @@ Located in `patterns/` directory of project-scaffolding:
 
 ### Ecosystem Resources
 Cross-project resources (relative paths from project root):
-- [Agent Skills Library](../agent-skills-library/README.md) - Reusable AI instructions
 - [Project Scaffolding](../project-scaffolding/README.md) - This scaffolding system
-
+- Claude Code Skills: `~/.claude/skills/` (18 skills, activate automatically)
 <!-- SCAFFOLD:END - Custom content below is preserved -->
+
+---
+
+## Project-Specific Execution Policy (Smart Invoice Workflow)
+
+- **Local models are discontinued on this machine.** Do not start or route tasks to Ollama/local models here.
+- **Local model work runs on the Mac Mini.** If local inference is required, coordinate with the Mac Mini environment.
+- **Sub-agent work must use subscription services.** Use Claude/Gemini via the subscription account, not API keys, for coding tasks on this machine.
+- **APIs are paused on this machine unless explicitly approved.** Do not add or rely on local API credentials.
+- **If blocked by these constraints, stop and ask for direction.**
