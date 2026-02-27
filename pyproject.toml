@@ -38,6 +38,9 @@ dev = [
     "ruff>=0.1.0",
 ]
 
+[project.scripts]
+app = "backend.app.main:app"
+
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"

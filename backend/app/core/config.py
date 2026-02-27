@@ -27,7 +27,9 @@ class Settings(BaseSettings):
     debug: bool = True
     cors_origins: str = "http://localhost:3000,http://localhost:8000"
     frontend_url: str = "http://localhost:3000"
+    backend_url: str = ""
     system_paused: bool = False  # Global kill switch (FR-21)
+    debug_mock_auth: bool = False  # Set to True to bypass Auth0 login locally
     
     # Database
     database_url: str
@@ -47,12 +49,12 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_price_id: str = ""
 
-    # Make.com
-    make_webhook_api_key: str = ""
-    make_api_url: str = "https://hook.integromat.com"
+    # Make.com Webhook URLs
+    make_daily_processing_webhook_url: str = ""
     make_list_sheets_webhook_url: str = ""
     make_validate_sheet_webhook_url: str = ""
     make_create_template_webhook_url: str = ""
+    x_make_api_key: str = ""
 
     # Resend
     resend_api_key: str = ""
@@ -60,6 +62,9 @@ class Settings(BaseSettings):
 
     # Digest Cron
     digest_cron_secret: str = ""
+
+    # System control
+    system_control_secret: str = ""
     
     @property
     def cors_origins_list(self) -> List[str]:
@@ -69,4 +74,3 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
-

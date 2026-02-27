@@ -16,6 +16,7 @@ from app.core.auth import require_auth, verify_make_api_key
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import User as UserSchema, UserUpdate, UserConfig
+from app.services.system_state import get_system_paused
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -61,6 +62,8 @@ async def get_user_config(
     
     # Calculate invoice_limit based on plan
     invoice_limit = 3 if user.plan == "free" else 100
+    paused = await get_system_paused(db)
+    backend_url = settings.backend_url.rstrip("/") if settings.backend_url else ""
     
     # Return config
     return UserConfig(
@@ -70,7 +73,8 @@ async def get_user_config(
         business_name=user.business_name,
         sheet_id=user.sheet_id,
         active=user.active,
-        paused=settings.system_paused,
+        paused=paused,
+        backend_url=backend_url,
         plan=user.plan,
         invoice_limit=invoice_limit
     )
@@ -123,4 +127,3 @@ async def update_user(
     await db.refresh(user)
     
     return user
-

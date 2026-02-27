@@ -41,13 +41,37 @@ oauth.register(
 
 
 @router.get("/login")
-async def login(request: Request):
+async def login(request: Request, db: AsyncSession = Depends(get_db)):
     """
-    Initiate Auth0 login flow.
-    
-    Redirects user to Auth0 Universal Login page.
-    After authentication, Auth0 will redirect back to /api/auth/callback
+    Initiate Auth0 login flow or Bypass for development.
     """
+    if settings.debug_mock_auth:
+        # 1. Check if mock user exists
+        result = await db.execute(
+            select(User).where(User.email == "mock.user@example.com")
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            # 2. Create mock user if doesn't exist
+            user = User(
+                auth0_user_id="auth0|mock_user_123",
+                email="mock.user@example.com",
+                name="Mock Developer",
+                business_name="Mock Systems Inc",
+                plan='paid',
+                active=True
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+            
+        # 3. Set session
+        request.session['user_id'] = str(user.id)
+        logger.info(f"MOCK AUTH: Logged in as {user.email}")
+        return RedirectResponse(url="/dashboard.html")
+
+    # Standard Auth0 flow
     redirect_uri = settings.auth0_callback_url
     return await oauth.auth0.authorize_redirect(request, redirect_uri)
 
