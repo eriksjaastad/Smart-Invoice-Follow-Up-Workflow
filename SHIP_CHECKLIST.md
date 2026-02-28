@@ -69,17 +69,25 @@ Vercel cron (daily)
 | STRIPE_SECRET_KEY | YES | |
 | STRIPE_WEBHOOK_SECRET | YES | |
 | STRIPE_PRICE_ID | YES | |
-| MAKE_DAILY_PROCESSING_WEBHOOK_URL | CHECK | Needs the webhook URL from Make.com |
-| MAKE_LIST_SHEETS_WEBHOOK_URL | CHECK | |
-| MAKE_VALIDATE_SHEET_WEBHOOK_URL | CHECK | |
-| MAKE_CREATE_TEMPLATE_WEBHOOK_URL | CHECK | |
-| X_MAKE_API_KEY | CHECK | |
+| MAKE_DAILY_PROCESSING_WEBHOOK_URL | YES | Set in .env and Vercel |
+| MAKE_LIST_SHEETS_WEBHOOK_URL | YES | Set in .env and Vercel |
+| MAKE_VALIDATE_SHEET_WEBHOOK_URL | YES | Set in .env and Vercel |
+| MAKE_CREATE_TEMPLATE_WEBHOOK_URL | YES | Set in .env and Vercel |
+| X_MAKE_API_KEY | YES | Set in .env and Vercel |
 | BACKEND_URL | YES | https://smartinvoiceworkflow.com |
 | RESEND_API_KEY | YES | |
 | RESEND_FROM_EMAIL | YES | noreply@send.synthinsightlabs.com |
-| FRONTEND_URL | CHECK | Should be https://smartinvoiceworkflow.com |
-| DIGEST_CRON_SECRET | CHECK | Needed for cron trigger auth |
-| SYSTEM_CONTROL_SECRET | CHECK | Needed for kill switch API |
+| FRONTEND_URL | YES | https://smartinvoiceworkflow.com |
+| DIGEST_CRON_SECRET | YES | Set in .env and Vercel |
+| SYSTEM_CONTROL_SECRET | YES | Set in .env and Vercel |
+| AUTH0_CALLBACK_URL | **FIX** | Still localhost — must be production URL |
+| JWT_SECRET | **FIX** | Still placeholder — generate real secret |
+| STRIPE_WEBHOOK_SECRET | **FIX** | Placeholder — need to create webhook endpoint first (see Step 9) |
+| STRIPE_SECRET_KEY | NOTE | Test key (`sk_test_`) — switch to live key before real launch |
+| STRIPE_PUBLISHABLE_KEY | NOTE | Test key (`pk_test_`) — switch to live key before real launch |
+| CORS_ORIGINS | **FIX** | Still localhost — must include production domain |
+| ENVIRONMENT | **FIX** | Still `development` — change to `production` |
+| DEBUG | **FIX** | Still `true` — change to `false` |
 
 **IMPORTANT:** These env vars must also be set in **Vercel Environment Variables** (Project Settings → Environment Variables). Local .env only works for local dev.
 
@@ -143,12 +151,29 @@ Vercel cron (daily)
 - [ ] Add cron job in vercel.json that hits /api/cron/trigger-daily daily
 - [ ] Verify it runs next day
 
-### Step 9: Ship
+### Step 9: Production hardening (env vars)
+- [x] `AUTH0_CALLBACK_URL` → `https://smartinvoiceworkflow.com/api/auth/callback` — DONE 2026-02-27
+- [x] `JWT_SECRET` → generate real secret — DONE 2026-02-27
+- [x] `CORS_ORIGINS` → add `https://smartinvoiceworkflow.com` — DONE 2026-02-27
+- [x] `SYSTEM_CONTROL_SECRET` → generate real secret — DONE 2026-02-27
+- [x] `STRIPE_WEBHOOK_SECRET` → create Stripe webhook endpoint, then grab `whsec_` secret — DONE 2026-02-28
+  - Endpoint ID: `we_1T5rCIJeImVkp02DzhZ3iheP`
+  - Endpoint URL: `https://smartinvoiceworkflow.com/api/billing/webhook`
+  - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+  - Mode: Test (livemode: false)
+  - **Stripe CLI installed** (`stripe` v1.37.1) — DONE 2026-02-27
+- [ ] Switch Stripe keys from test (`sk_test_`/`pk_test_`) to live before real launch
+- [ ] `ENVIRONMENT` → `production` (leave as `development` until ready)
+- [ ] `DEBUG` → `false` (leave as `true` until ready)
+- [ ] `GMAIL_SENDER` → set real email or remove if legacy-only
+- [ ] Update all changed values in Vercel env vars AND redeploy
+
+### Step 10: Ship
 - [ ] All steps above green
 - [ ] Turn on Make.com scenarios (Daily Processing, List Sheets, Validate Sheet)
 - [ ] Monitor first real daily run
 
-### Step 10: Distribution (2 days max, then stop)
+### Step 11: Distribution (2 days max, then stop)
 - [ ] Product Hunt
 - [ ] Reddit (r/SideProject, r/EntrepreneurRideAlong)
 - [ ] Indie Hackers
@@ -165,6 +190,18 @@ Vercel cron (daily)
 | Legal (ToS/Privacy) not done | #4812 | Must complete before public launch |
 | Product name research not done | #4811 | Low risk, do before distribution |
 | Make.com pricing model not validated | #4810 | Need to verify free tier is sustainable |
+
+---
+
+## Legal Docs (Drafts)
+
+- [ ] Review and finalize Terms of Service draft:
+[Terms of Service](Documents/legal/TERMS_OF_SERVICE.md)
+- [ ] Review and finalize Privacy Policy draft:
+[Privacy Policy](Documents/legal/PRIVACY_POLICY.md)
+- [ ] Use a generator to finalize language and confirm required clauses:
+Termly, TermsFeed, or iubenda
+- [ ] Publish final versions to the site footer and link on signup page
 
 ---
 

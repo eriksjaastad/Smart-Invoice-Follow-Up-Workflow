@@ -4,7 +4,7 @@ Weekly digest email service.
 Provides functions for calculating digest data and sending weekly summary emails.
 """
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Optional
@@ -78,7 +78,7 @@ async def calculate_digest(user_id: UUID, db: AsyncSession) -> Optional[DigestDa
         return None
     
     # Calculate date range (past 7 days)
-    seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
     
     # Query job history for past 7 days
     result = await db.execute(
