@@ -110,24 +110,26 @@ Vercel cron (daily)
 ## Ship Sequence (Do In This Order)
 
 ### Step 1: Push code to git → Vercel deploys
-- [ ] `git push origin main`
-- [ ] Verify build succeeds on Vercel dashboard
-- [ ] Hit https://smartinvoiceworkflow.com/api/health — should return JSON
+- [x] `git push origin main` — DONE 2026-02-28
+- [x] Verify build succeeds on Vercel dashboard — DONE 2026-02-28
+- [x] Hit https://smartinvoiceworkflow.com/health — returns JSON — DONE 2026-02-28
+- **NOTE:** Domain was on wrong Vercel project (`smartinvoiceworkflow` vs `smart-invoice-workflow`). Fixed 2026-02-28.
+- **NOTE:** No GitHub integration on this project. Deploys via `vercel --prod` CLI.
 
 ### Step 2: Verify Vercel env vars
-- [ ] All env vars from table above are set in Vercel project settings
-- [ ] BACKEND_URL = https://smartinvoiceworkflow.com
-- [ ] MAKE_DAILY_PROCESSING_WEBHOOK_URL is set
-- [ ] Redeploy if you added env vars after the build
+- [x] All 24 env vars set in Vercel project settings — VERIFIED 2026-02-28
+- [x] BACKEND_URL = https://smartinvoiceworkflow.com — VERIFIED
+- [x] MAKE_DAILY_PROCESSING_WEBHOOK_URL is set — VERIFIED
+- [x] Redeployed after adding BACKEND_URL and SYSTEM_CONTROL_SECRET — DONE 2026-02-28
 
 ### Step 3: Verify backend endpoints
-- [ ] GET https://smartinvoiceworkflow.com/api/health → 200
-- [ ] GET https://smartinvoiceworkflow.com/api/system/status → {"paused": false}
-- [ ] Landing page loads at https://smartinvoiceworkflow.com/
+- [x] GET https://smartinvoiceworkflow.com/health → 200 — DONE 2026-02-28
+- [x] GET https://smartinvoiceworkflow.com/api/system/status → {"paused": false} — DONE 2026-02-28
+- [x] Landing page loads at https://smartinvoiceworkflow.com/ → 200 — DONE 2026-02-28
 
 ### Step 4: Test Make.com connection
-- [ ] curl POST to /api/cron/trigger-daily with cron secret (will return 0 users sent, which is correct — no users yet)
-- [ ] Verify Make.com Daily Processing scenario received nothing (because 0 users)
+- [x] curl POST to /api/cron/trigger-daily with cron secret → `{"success":true,"users_total":0,"sent":0}` — DONE 2026-02-28
+- [x] Make.com scenarios are OFF (correct — don't turn on until Step 10)
 
 ### Step 5: Test signup flow (first real user = you)
 - [ ] Sign up via Auth0
@@ -143,13 +145,14 @@ Vercel cron (daily)
 - [ ] Verify invoice_limit changes from 3 to 100
 
 ### Step 7: Test kill switch
-- [ ] POST /api/system/pause with secret → paused=true
-- [ ] Trigger daily processing → Make.com should skip all users
-- [ ] POST /api/system/pause → paused=false (re-enable)
+- [x] POST /api/system/pause with secret → `{"paused":true}` — DONE 2026-02-28
+- [x] Verified status endpoint returns paused=true — DONE 2026-02-28
+- [x] POST /api/system/pause → `{"paused":false}` (re-enabled) — DONE 2026-02-28
+- **BUG FIXED:** 500 error on pause was caused by timezone-aware datetimes vs tz-naive DB columns. Fixed in commit 3ca4196.
 
 ### Step 8: Set up Vercel cron (daily trigger)
-- [ ] Add cron job in vercel.json that hits /api/cron/trigger-daily daily
-- [ ] Verify it runs next day
+- [x] Cron job in vercel.json: `0 15 * * *` (daily at 3PM UTC / 10AM EST) — DONE
+- [ ] Verify it runs next day (check tomorrow)
 
 ### Step 9: Production hardening (env vars)
 - [x] `AUTH0_CALLBACK_URL` → `https://smartinvoiceworkflow.com/api/auth/callback` — DONE 2026-02-27
@@ -163,10 +166,10 @@ Vercel cron (daily)
   - Mode: Test (livemode: false)
   - **Stripe CLI installed** (`stripe` v1.37.1) — DONE 2026-02-27
 - [ ] Switch Stripe keys from test (`sk_test_`/`pk_test_`) to live before real launch
-- [ ] `ENVIRONMENT` → `production` (leave as `development` until ready)
-- [ ] `DEBUG` → `false` (leave as `true` until ready)
-- [ ] `GMAIL_SENDER` → set real email or remove if legacy-only
-- [ ] Update all changed values in Vercel env vars AND redeploy
+- [x] `ENVIRONMENT` → `production` — already set in Vercel — VERIFIED 2026-02-28
+- [ ] `DEBUG` → `false` (intentionally left as `true` until all testing complete)
+- [x] `GMAIL_SENDER` → NOT USED in codebase, legacy only — VERIFIED 2026-02-28
+- [x] All env vars verified in Vercel, redeployed — DONE 2026-02-28
 
 ### Step 10: Ship
 - [ ] All steps above green
