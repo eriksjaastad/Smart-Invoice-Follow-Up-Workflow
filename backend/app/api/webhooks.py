@@ -8,7 +8,7 @@ Provides endpoints for:
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from datetime import datetime, timezone, date
+from datetime import datetime, date
 
 from app.core.auth import verify_make_api_key
 from app.db.session import get_db
@@ -85,7 +85,7 @@ async def receive_make_results(
         # Update existing record
         existing_record.drafts_created = payload.drafts_created
         existing_record.total_outstanding_amount = payload.total_outstanding_amount
-        existing_record.run_at = datetime.now(timezone.utc)
+        existing_record.run_at = datetime.utcnow()
         await db.commit()
         logger.info(f"Updated existing job_history record for user {payload.user_id}")
         job_id = existing_record.id
@@ -93,7 +93,7 @@ async def receive_make_results(
         # Create new record
         job = JobHistory(
             user_id=payload.user_id,
-            run_at=datetime.now(timezone.utc),
+            run_at=datetime.utcnow(),
             invoices_checked=payload.invoices_checked,
             drafts_created=payload.drafts_created,
             total_outstanding_amount=payload.total_outstanding_amount,
@@ -107,7 +107,7 @@ async def receive_make_results(
         job_id = job.id
 
     # Update user's last_run_at timestamp
-    user.last_run_at = datetime.now(timezone.utc)
+    user.last_run_at = datetime.utcnow()
     await db.commit()
 
     return MakeWebhookResponse(

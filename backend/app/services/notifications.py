@@ -4,7 +4,7 @@ Error notification service.
 Provides functions for tracking consecutive failures and sending error notification emails.
 """
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 

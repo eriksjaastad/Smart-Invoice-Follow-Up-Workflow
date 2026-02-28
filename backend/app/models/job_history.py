@@ -1,7 +1,7 @@
 """
 Job history database model.
 """
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import Integer, DateTime, ForeignKey, Numeric
@@ -28,7 +28,7 @@ class JobHistory(Base):
     )
     
     # Job execution details
-    run_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    run_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.utcnow(), nullable=False, index=True)
     invoices_checked: Mapped[int] = mapped_column(Integer, nullable=False)
     drafts_created: Mapped[int] = mapped_column(Integer, nullable=False)
     
@@ -42,7 +42,7 @@ class JobHistory(Base):
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     
     # Timestamp
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
     
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="job_history")
