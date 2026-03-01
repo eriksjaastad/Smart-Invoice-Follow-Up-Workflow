@@ -1,0 +1,27 @@
+{
+  "name": "smart-invoice-workflow",
+  "version": "1.0.0",
+  "description": "<!-- SCAFFOLD:START - Do not edit between markers --> # smart-invoice-workflow",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eriksjaastad/Smart-Invoice-Follow-Up-Workflow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/eriksjaastad/Smart-Invoice-Follow-Up-Workflow/issues"
+  },
+  "homepage": "https://github.com/eriksjaastad/Smart-Invoice-Follow-Up-Workflow#readme",
+  "dependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
