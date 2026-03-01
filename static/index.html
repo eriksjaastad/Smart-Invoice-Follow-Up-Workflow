@@ -5,218 +5,584 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Invoice | Stop Chasing Invoices</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600;1,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind (Play CDN for prototyping) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E4036',   // Moss
+                        accent: '#CC5833',    // Clay
+                        background: '#F2F0E9', // Cream
+                        charcoal: '#1A1A1A',  // Charcoal
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                        drama: ['"Cormorant Garamond"', 'serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace'],
+                    },
+                    borderRadius: {
+                        '3xl': '2rem',
+                        '4xl': '3rem',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-background text-charcoal font-sans selection:bg-accent/20 overflow-x-hidden;
+            }
+        }
+        
+        @layer components {
+            .noise-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0.05;
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            }
+            
+            .btn-magnetic {
+                @apply relative overflow-hidden transition-all duration-300 transform-gpu hover:scale-[1.03] active:scale-[0.98];
+                transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+            
+            .btn-magnetic span {
+                @apply absolute inset-0 bg-accent translate-y-full transition-transform duration-300 ease-out;
+            }
+            
+            .btn-magnetic:hover span {
+                @apply translate-y-0;
+            }
+            
+            .glass {
+                @apply bg-background/60 backdrop-blur-xl border border-charcoal/5;
+            }
+        }
+    </style>
+    
+    <!-- Core Libraries (Loading in specific order) -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Animation & Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+        // Initialize Lucide Icons
+        const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
+            const iconRef = useRef(null);
+            
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
+        };
+
+        const Navbar = () => {
+            const [isScrolled, setIsScrolled] = useState(false);
+
+            useEffect(() => {
+                const handleScroll = () => setIsScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <nav className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 w-[90%] max-w-5xl rounded-full py-3 px-6 flex items-center justify-between ${
+                    isScrolled ? 'glass shadow-xl' : 'bg-transparent text-white'
+                }`}>
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white">
+                            <Icon name="zap" size={16} fill="white" />
+                        </div>
+                        <span className="font-heading font-extrabold tracking-tighter text-xl">
+                            SMART <span className="font-drama italic font-medium">INVOICE</span>
+                        </span>
+                    </div>
+                    
+                    <div className="hidden md:flex items-center gap-8 font-heading text-sm font-medium tracking-tight">
+                        <a href="#" className="hover:text-accent transition-colors">Protocol</a>
+                        <a href="#" className="hover:text-accent transition-colors">Philosophy</a>
+                        <a href="#" className="hover:text-accent transition-colors">Pricing</a>
+                    </div>
+
+                    <a href="/login.html" className={`px-6 py-2 rounded-full font-heading text-sm font-bold btn-magnetic group relative ${
+                        isScrolled ? 'bg-charcoal text-white' : 'bg-white text-charcoal'
+                    }`}>
+                        <span className="bg-accent"></span>
+                        <div className="relative z-10 flex items-center gap-2">
+                            Start Free <Icon name="arrow-right" size={14} className="group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </a>
+                </nav>
+            );
+        };
+
+        const Hero = () => {
+            const heroRef = useRef(null);
+
+            useEffect(() => {
+                gsap.registerPlugin(ScrollTrigger);
+                const ctx = gsap.context(() => {
+                    gsap.from('.hero-stagger', {
+                        y: 40,
+                        opacity: 0,
+                        duration: 1.2,
+                        stagger: 0.15,
+                        ease: "power3.out",
+                    });
+                }, heroRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section ref={heroRef} className="relative h-[100dvh] w-full flex items-end overflow-hidden bg-charcoal">
+                    <div className="absolute inset-0">
+                        <img 
+                            src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=2000" 
+                            className="w-full h-full object-cover opacity-60 scale-105"
+                            alt="Background"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/40 to-transparent"></div>
+                    </div>
+                    
+                    <div className="relative z-10 p-8 md:p-20 lg:p-32 max-w-6xl w-full">
+                        <div className="flex flex-col gap-4">
+                            <div className="hero-stagger flex items-center gap-2 px-3 py-1 rounded-full bg-accent/20 backdrop-blur-md border border-accent/30 text-accent text-[10px] font-mono uppercase tracking-[0.2em] w-fit">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                                </span>
+                                Automated Cashflow Protection
+                            </div>
+                            
+                            <h1 className="text-white">
+                                <span className="hero-stagger block font-heading font-extrabold text-5xl md:text-7xl lg:text-9xl tracking-tighter leading-none mb-2">
+                                    Follow-up is the
+                                </span>
+                                <span className="hero-stagger block font-drama italic text-7xl md:text-9xl lg:text-[14rem] leading-[0.8] text-accent">
+                                    Standard.
+                                </span>
+                            </h1>
+                            
+                            <p className="hero-stagger text-white/60 text-lg md:text-xl max-w-xl font-heading font-medium leading-relaxed mt-8">
+                                Smart Invoice automates your 42-day escalation workflow. Connect Google Sheets, pick your file, and let the system handle the rest.
+                            </p>
+                            
+                            <div className="hero-stagger mt-10">
+                                <a href="/login.html" className="px-10 py-5 rounded-full bg-accent text-white font-heading font-extrabold text-lg btn-magnetic group inline-flex items-center gap-3">
+                                    <span className="bg-white/20"></span>
+                                    <div className="relative z-10 flex items-center gap-3">
+                                        Deploy Protocol <Icon name="arrow-right" size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const DiagnosticShuffler = () => {
+            const [items, setItems] = useState([
+                { id: 1, label: "Stage 07: Reminder Sent", icon: "mail" },
+                { id: 2, label: "Stage 21: Final Notice", icon: "file-text" },
+                { id: 3, label: "Stage 42: Escalation", icon: "shield-check" }
+            ]);
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setItems(prev => {
+                        const newArr = [...prev];
+                        newArr.unshift(newArr.pop());
+                        return newArr;
+                    });
+                }, 3000);
+                return () => clearInterval(interval);
+            }, []);
+
+            return (
+                <div className="relative h-48 w-full flex items-center justify-center overflow-hidden">
+                    {items.map((item, i) => (
+                        <div 
+                            key={item.id}
+                            className={`absolute w-[80%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border rounded-2xl p-4 flex items-center gap-4 bg-background shadow-lg
+                                ${i === 0 ? 'translate-y-0 opacity-100 scale-100 z-30 border-accent/20' : 
+                                  i === 1 ? 'translate-y-12 opacity-40 scale-90 z-20 border-charcoal/10' : 
+                                  'translate-y-24 opacity-0 scale-75 z-10 border-charcoal/5'}
+                            `}
+                        >
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <Icon name={item.icon} size={16} />
+                            </div>
+                            <span className="font-heading font-bold text-charcoal">{item.label}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const TelemetryTypewriter = () => {
+            const [text, setText] = useState("");
+            const phrases = [
+                "SYNCING_WITH_GSHEET...",
+                "AUTH0_HANDSHAKE_OK",
+                "MAKE_FLOW_ACTIVE",
+                "READY_FOR_AUTOMATION"
+            ];
+            const [phraseIndex, setPhraseIndex] = useState(0);
+
+            useEffect(() => {
+                let charIndex = 0;
+                let currentPhrase = phrases[phraseIndex];
+                let isCancelled = false;
+                
+                const type = () => {
+                    if (isCancelled) return;
+                    if (charIndex <= currentPhrase.length) {
+                        setText(currentPhrase.substring(0, charIndex));
+                        charIndex++;
+                        setTimeout(type, 50);
+                    } else {
+                        setTimeout(() => {
+                            if (!isCancelled) setPhraseIndex((prev) => (prev + 1) % phrases.length);
+                        }, 2000);
+                    }
+                };
+                
+                type();
+                return () => { isCancelled = true; };
+            }, [phraseIndex]);
+
+            return (
+                <div className="p-6 bg-charcoal rounded-3xl w-full">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+                        <span className="text-white/40 font-mono text-[10px] tracking-widest uppercase">Live Feed</span>
+                    </div>
+                    <div className="font-mono text-accent text-sm md:text-base min-h-[1.5em] flex items-center">
+                        {text}<span className="w-2 h-4 bg-accent ml-1 animate-pulse"></span>
+                    </div>
+                </div>
+            );
+        };
+
+        const CursorScheduler = () => {
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            const [activeDay, setActiveDay] = useState(null);
+            const cursorRef = useRef(null);
+
+            useEffect(() => {
+                const timeline = gsap.timeline({ repeat: -1 });
+                timeline
+                    .to(cursorRef.current, { x: 120, y: 40, duration: 1.5, ease: "power2.inOut" })
+                    .to(cursorRef.current, { scale: 0.9, duration: 0.1 })
+                    .call(() => setActiveDay(5))
+                    .to(cursorRef.current, { scale: 1, duration: 0.1 })
+                    .to(cursorRef.current, { x: 200, y: 100, duration: 1.5, ease: "power2.inOut" })
+                    .to(cursorRef.current, { opacity: 0, duration: 0.5 })
+                    .delay(1)
+                    .set(cursorRef.current, { x: 0, y: 0, opacity: 1 })
+                    .call(() => setActiveDay(null));
+                
+                return () => timeline.kill();
+            }, []);
+
+            return (
+                <div className="relative p-6 bg-white rounded-3xl border border-charcoal/5 overflow-hidden">
+                    <div className="grid grid-cols-7 gap-2 mb-4">
+                        {days.map((day, i) => (
+                            <div 
+                                key={i}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center font-heading text-xs font-bold transition-colors ${
+                                    activeDay === i ? 'bg-accent text-white' : 'bg-background text-charcoal/40'
+                                }`}
+                            >
+                                {day}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="h-10 w-full bg-background rounded-full flex items-center px-4 justify-between">
+                        <span className="font-mono text-[10px] text-charcoal/40 uppercase">Send Digest</span>
+                        <div className={`w-4 h-4 rounded-full transition-colors ${activeDay === 5 ? 'bg-accent' : 'bg-charcoal/10'}`}></div>
+                    </div>
+                    <div ref={cursorRef} className="absolute top-0 left-0 pointer-events-none z-50 text-accent">
+                        <Icon name="mouse-pointer-2" size={24} />
+                    </div>
+                </div>
+            );
+        };
+
+        const Features = () => (
+            <section className="py-32 px-8 bg-background">
+                <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+                    <div className="flex flex-col gap-8">
+                        <DiagnosticShuffler />
+                        <div>
+                            <h3 className="font-heading font-extrabold text-2xl mb-4">42-day Escalation</h3>
+                            <p className="text-charcoal/60 font-heading">Our proven 6-stage reminder cycle ensures you get paid without lifting a finger.</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-8">
+                        <TelemetryTypewriter />
+                        <div>
+                            <h3 className="font-heading font-extrabold text-2xl mb-4">Zero-Touch Integration</h3>
+                            <p className="text-charcoal/60 font-heading">Make.com handles the OAuth. Your keys never touch our servers. Pure security.</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-8">
+                        <CursorScheduler />
+                        <div>
+                            <h3 className="font-heading font-extrabold text-2xl mb-4">Weekly Success</h3>
+                            <p className="text-charcoal/60 font-heading">Receive an automated digest of reminders sent and payments captured every week.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Philosophy = () => {
+            const sectionRef = useRef(null);
+
+            useEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.from('.phi-text', {
+                        scrollTrigger: { trigger: sectionRef.current, start: "top 80%" },
+                        y: 40, opacity: 0, duration: 1, stagger: 0.2, ease: "power3.out"
+                    });
+                }, sectionRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <section ref={sectionRef} className="relative py-48 px-8 bg-charcoal overflow-hidden">
+                    <div className="absolute inset-0 opacity-20">
+                        <img src="https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&q=80&w=2000" className="w-full h-full object-cover grayscale" />
+                    </div>
+                    <div className="relative z-10 max-w-5xl mx-auto text-center">
+                        <p className="phi-text text-white/40 font-heading text-lg mb-8">Most invoice software focuses on: manual entry and reactive chasing.</p>
+                        <h2 className="phi-text text-white">
+                            <span className="block font-heading font-extrabold text-4xl md:text-6xl tracking-tight mb-4">We focus on: The</span>
+                            <span className="block font-drama italic text-7xl md:text-[10rem] text-accent leading-none">Autonomy</span>
+                            <span className="block font-heading font-extrabold text-4xl md:text-6xl tracking-tight mt-4">of your cashflow.</span>
+                        </h2>
+                    </div>
+                </section>
+            );
+        };
+
+        const ProtocolCard = ({ step, title, desc, index }) => {
+            const cardRef = useRef(null);
+
+            useLayoutEffect(() => {
+                const ctx = gsap.context(() => {
+                    gsap.to(cardRef.current, {
+                        scrollTrigger: {
+                            trigger: cardRef.current,
+                            start: "top 10%",
+                            end: "bottom 10%",
+                            scrub: true,
+                            pin: true,
+                            pinSpacing: false,
+                        },
+                        scale: 0.9, opacity: 0.5, filter: "blur(10px)",
+                    });
+                }, cardRef);
+                return () => ctx.revert();
+            }, []);
+
+            return (
+                <div ref={cardRef} className="h-screen w-full flex items-center justify-center px-8 sticky top-0 bg-background">
+                    <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+                        <div>
+                            <span className="font-mono text-accent text-xl mb-4 block">Protocol {step}</span>
+                            <h3 className="font-heading font-extrabold text-5xl md:text-7xl tracking-tighter mb-8 leading-none">{title}</h3>
+                            <p className="text-charcoal/60 text-xl font-heading leading-relaxed">{desc}</p>
+                        </div>
+                        <div className="relative flex items-center justify-center min-h-[300px] w-full">
+                            {index === 0 && (
+                                <div className="w-48 h-48 border-2 border-accent/20 rounded-full flex items-center justify-center animate-[spin_20s_linear_infinite]">
+                                    <div className="w-32 h-32 border-2 border-accent/40 rounded-full flex items-center justify-center">
+                                        <div className="w-16 h-16 bg-accent/10 rounded-full border border-accent animate-pulse"></div>
+                                    </div>
+                                </div>
+                            )}
+                            {index === 1 && (
+                                <div className="w-full max-w-[300px] aspect-square relative border border-charcoal/5 rounded-2xl overflow-hidden bg-charcoal/[0.02]">
+                                    <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 gap-px p-4">
+                                        {[...Array(36)].map((_, i) => (
+                                            <div key={i} className="bg-charcoal/5 rounded-sm relative">
+                                                <div className={`absolute inset-0 bg-accent/20 transition-opacity duration-1000 ${Math.random() > 0.8 ? 'opacity-100' : 'opacity-0'} animate-pulse`}></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-50 animate-[scan_3s_ease-in-out_infinite]"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-24 h-24 border border-accent/20 rounded-full animate-ping opacity-20"></div>
+                                    </div>
+                                </div>
+                            )}
+                            {index === 2 && (
+                                <div className="w-full max-w-[320px] flex flex-col gap-6 items-center">
+                                    <div className="flex items-center justify-between w-full relative">
+                                        <div className="absolute top-1/2 left-0 w-full h-px bg-charcoal/10 -z-10"></div>
+                                        <div className="w-12 h-12 rounded-xl bg-charcoal text-white flex items-center justify-center border border-white/10 shadow-xl">
+                                            <Icon name="file-text" size={20} />
+                                        </div>
+                                        <div className="flex-1 h-px relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent to-transparent w-1/2 animate-[pipeline_2s_linear_infinite]"></div>
+                                        </div>
+                                        <div className="w-16 h-16 rounded-2xl bg-accent text-white flex items-center justify-center shadow-2xl animate-pulse">
+                                            <Icon name="zap" size={28} />
+                                        </div>
+                                        <div className="flex-1 h-px relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent to-transparent w-1/2 animate-[pipeline_2s_linear_infinite_0.5s]"></div>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-xl bg-charcoal text-white flex items-center justify-center border border-white/10 shadow-xl">
+                                            <Icon name="mail" size={20} />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-4 w-full px-4">
+                                        <div className="h-1 bg-charcoal/5 rounded-full overflow-hidden">
+                                            <div className="h-full bg-accent/40 w-full animate-[loading_3s_ease-in-out_infinite]"></div>
+                                        </div>
+                                        <div className="h-1 bg-charcoal/5 rounded-full overflow-hidden">
+                                            <div className="h-full bg-accent/40 w-full animate-[loading_3s_ease-in-out_infinite_1s]"></div>
+                                        </div>
+                                        <div className="h-1 bg-charcoal/5 rounded-full overflow-hidden">
+                                            <div className="h-full bg-accent/40 w-full animate-[loading_3s_ease-in-out_infinite_2s]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Pricing = () => (
+            <section className="py-32 px-8 bg-charcoal text-white rounded-t-[4rem]">
+                <div className="max-w-6xl mx-auto">
+                    <h2 className="font-heading font-extrabold text-5xl md:text-7xl tracking-tighter mb-20 text-center">Standard Access.</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="p-10 rounded-4xl bg-white/5 border border-white/10 flex flex-col gap-8 hover:bg-white/10 transition-colors">
+                            <span className="font-mono text-white/40 uppercase text-xs tracking-widest">Essential</span>
+                            <div className="text-5xl font-heading font-extrabold">$0<span className="text-white/40 text-xl">/mo</span></div>
+                            <ul className="flex flex-col gap-4 text-white/60 font-heading">
+                                <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> 3 Invoices / day</li>
+                                <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> 42-day cycle</li>
+                            </ul>
+                            <a href="/login.html" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Select</a>
+                        </div>
+                        <div className="p-10 rounded-4xl bg-accent flex flex-col gap-8 transform md:scale-105 shadow-2xl">
+                            <span className="font-mono text-white/60 uppercase text-xs tracking-widest">Performance</span>
+                            <div className="text-5xl font-heading font-extrabold">$15<span className="text-white/60 text-xl">/mo</span></div>
+                            <ul className="flex flex-col gap-4 text-white/90 font-heading">
+                                <li className="flex items-center gap-2"><Icon name="check" size={16} /> 100 Invoices / day</li>
+                                <li className="flex items-center gap-2"><Icon name="check" size={16} /> Priority queue</li>
+                            </ul>
+                            <a href="/login.html" className="mt-auto py-4 rounded-full bg-white text-accent text-center font-bold">Go Performance</a>
+                        </div>
+                        <div className="p-10 rounded-4xl bg-white/5 border border-white/10 flex flex-col gap-8">
+                            <span className="font-mono text-white/40 uppercase text-xs tracking-widest">Enterprise</span>
+                            <div className="text-5xl font-heading font-extrabold">Custom</div>
+                            <ul className="flex flex-col gap-4 text-white/60 font-heading">
+                                <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> Unlimited scale</li>
+                                <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> Dedicated instance</li>
+                            </ul>
+                            <a href="mailto:erik@synthinsight.labs" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Contact</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const Footer = () => (
+            <footer className="py-20 px-8 bg-charcoal border-t border-white/5">
+                <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
+                    <div>
+                        <div className="flex items-center gap-2 mb-6">
+                            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white"><Icon name="zap" size={16} /></div>
+                            <span className="font-heading font-extrabold tracking-tighter text-xl text-white">SMART <span className="font-drama italic font-medium">INVOICE</span></span>
+                        </div>
+                        <p className="text-white/40 font-heading max-w-xs">The autonomous standard for modern invoice management. Built by Synth Insight Labs.</p>
+                    </div>
+                    <div className="flex flex-col gap-4 items-start md:items-end">
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-[10px] font-mono uppercase tracking-[0.2em]">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                            System Operational
+                        </div>
+                        <div className="flex gap-8 text-white/40 font-heading text-sm">
+                            <a href="#" className="hover:text-white">Terms</a>
+                            <a href="#" className="hover:text-white">Privacy</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        );
+
+        const App = () => (
+            <main>
+                <Navbar />
+                <Hero />
+                <Features />
+                <Philosophy />
+                <div className="relative">
+                    <ProtocolCard step="01" title="Connect." desc="Authorize your Google account through our secure Make.com portal." index={0} />
+                    <ProtocolCard step="02" title="Index." desc="Select your invoice spreadsheet. Our system indexes your recipients." index={1} />
+                    <ProtocolCard step="03" title="Automate." desc="The 42-day escalation engine takes over. Drafts are created." index={2} />
+                </div>
+                <Pricing />
+                <Footer />
+            </main>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        @keyframes scan { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(300px); } }
+        @keyframes pipeline { 
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+        @keyframes loading {
+            0%, 100% { transform: scaleX(0.1); transform-origin: left; }
+            50% { transform: scaleX(1); transform-origin: left; }
+        }
     </style>
-</head>
-<body class="bg-slate-50 text-slate-900 selection:bg-blue-100">
-    <!-- Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-32 items-center">
-                <div class="flex items-center">
-                    <img src="/images/logo.png" alt="Smart Invoice" class="h-24 w-auto object-contain">
-                </div>
-                <div>
-                    <a href="/login.html" class="text-slate-600 hover:text-slate-900 font-medium px-4 py-2 transition-colors">Log In</a>
-                    <a href="/login.html" class="ml-2 bg-slate-900 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm">Start Free</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="py-24 px-4 bg-white">
-        <div class="max-w-4xl mx-auto text-center">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-medium mb-8 border border-blue-100">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                Automated invoice dispatch
-            </div>
-            
-            <h1 class="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 leading-tight tracking-tight">
-                Automate your invoice <br><span class="text-blue-600">dispatch & follow-up.</span>
-            </h1>
-            <p class="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Connect your Google Sheet and let us handle the heavy lifting. We dispatch your invoices and perfectly-timed follow-ups directly to your clients via Gmail.
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                <a href="/login.html" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                    Start Your Free Trial
-                </a>
-                <p class="text-sm text-slate-500 mt-3 sm:mt-0 sm:ml-4">No credit card required. Free for 3 invoices/mo.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works (Trust & Transparency focus) -->
-    <section class="py-24 px-4 bg-slate-50 border-t border-slate-100">
-        <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4">How it works (The invisible assistant)</h2>
-                <p class="text-slate-600 max-w-2xl mx-auto text-lg">We designed this for non-technical business owners. No complex software, no new tools to learn. It just works behind the scenes.</p>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-10">
-                <!-- Step 1 -->
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-                    <div class="bg-blue-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6 border border-blue-100">
-                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">1. Connect Your Sheet</h3>
-                    <p class="text-slate-600 leading-relaxed">
-                        Securely connect the Google Spreadsheet where you currently track your invoices. We only ask for the permissions we strictly need.
-                    </p>
-                </div>
-
-                <!-- Step 2 -->
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-                    <div class="bg-emerald-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6 border border-emerald-100">
-                        <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">2. We Check Daily</h3>
-                    <p class="text-slate-600 leading-relaxed">
-                        Every single day, our system silently checks your sheet for overdue invoices. We automatically calculate the right time and tone for follow-ups.
-                    </p>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-                    <div class="bg-indigo-50 w-14 h-14 rounded-xl flex items-center justify-center mb-6 border border-indigo-100">
-                        <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">3. You Review & Send</h3>
-                    <p class="text-slate-600 leading-relaxed">
-                        We don't send emails automatically (to protect your client relationships). We create Drafts in your Gmail. You review them and click "Send".
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Value Proposition / "Set it and forget it" -->
-    <section class="py-24 px-4 bg-white border-t border-slate-100">
-        <div class="max-w-5xl mx-auto">
-            <div class="bg-slate-900 rounded-3xl p-10 md:p-16 text-center text-white shadow-xl relative overflow-hidden">
-                <!-- Abstract background shape -->
-                <div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
-                <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-                
-                <h2 class="text-3xl md:text-4xl font-bold mb-6 relative z-10">We send the weekly summary. <br>You relax.</h2>
-                <p class="text-lg text-slate-300 mb-10 max-w-2xl mx-auto relative z-10">
-                    To give you peace of mind that the system is working, we send you a quick summary email every Monday. It shows how many drafts we created and your total outstanding amount. No need to log into a dashboard.
-                </p>
-                <div class="relative z-10">
-                    <a href="/login.html" class="inline-block bg-white text-slate-900 px-8 py-3 rounded-xl font-semibold hover:bg-slate-50 transition-colors">
-                        Get Started
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section class="py-24 px-4 bg-slate-50 border-t border-slate-100" id="pricing">
-        <div class="max-w-5xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4">Simple, Transparent Pricing</h2>
-                <p class="text-slate-600 text-lg">Pay only when you have a high volume of invoices.</p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <!-- Free Tier -->
-                <div class="bg-white rounded-2xl shadow-sm p-8 border border-slate-200 flex flex-col">
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">Free</h3>
-                    <p class="text-slate-500 text-sm mb-6">Perfect for independent freelancers</p>
-                    <div class="mb-6 flex items-baseline gap-1">
-                        <span class="text-4xl font-extrabold text-slate-900">$0</span>
-                        <span class="text-slate-500 font-medium">/month</span>
-                    </div>
-                    <ul class="space-y-4 mb-8 flex-1">
-                        <li class="flex items-start gap-3 text-slate-600">
-                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Up to 3 active overdue invoices
-                        </li>
-                        <li class="flex items-start gap-3 text-slate-600">
-                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Daily automated checks
-                        </li>
-                        <li class="flex items-start gap-3 text-slate-600">
-                            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Full 6-stage follow-up sequence
-                        </li>
-                    </ul>
-                    <a href="/login.html" class="block w-full text-center bg-slate-100 text-slate-900 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-colors">
-                        Start for Free
-                    </a>
-                </div>
-
-                <!-- Pro Tier -->
-                <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-blue-500 relative flex flex-col transform md:-translate-y-2">
-                    <div class="absolute -top-4 inset-x-0 flex justify-center">
-                        <span class="bg-blue-500 text-white px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">Most Popular</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">Pro</h3>
-                    <p class="text-slate-500 text-sm mb-6">For agencies and small teams</p>
-                    <div class="mb-6 flex items-baseline gap-1">
-                        <span class="text-4xl font-extrabold text-slate-900">$15</span>
-                        <span class="text-slate-500 font-medium">/month</span>
-                    </div>
-                    <ul class="space-y-4 mb-8 flex-1">
-                        <li class="flex items-start gap-3 text-slate-600">
-                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span class="font-semibold text-slate-900">Up to 100 active overdue invoices</span>
-                        </li>
-                        <li class="flex items-start gap-3 text-slate-600">
-                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Daily automated checks
-                        </li>
-                        <li class="flex items-start gap-3 text-slate-600">
-                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Weekly performance digest email
-                        </li>
-                        <li class="flex items-start gap-3 text-slate-600">
-                            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            Priority email support
-                        </li>
-                    </ul>
-                    <a href="/login.html" class="block w-full text-center bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm">
-                        Start Pro Trial
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-10 px-4">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-2">
-                <img src="/images/logo.png" alt="Logo" class="h-6 w-auto grayscale opacity-50">
-                <p class="text-slate-500 text-sm">&copy; 2026 Synth Insight Labs. All rights reserved.</p>
-            </div>
-            <div class="flex gap-6 text-sm">
-                <a href="#" class="text-slate-500 hover:text-slate-900 transition-colors">Privacy Policy</a>
-                <a href="#" class="text-slate-500 hover:text-slate-900 transition-colors">Terms of Service</a>
-                <a href="mailto:support@synthinsightlabs.com" class="text-slate-500 hover:text-slate-900 transition-colors">Support</a>
-            </div>
-        </div>
-    </footer>
 </body>
 </html>
