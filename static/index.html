@@ -54,7 +54,7 @@
                 pointer-events: none;
                 z-index: 9999;
                 opacity: 0.05;
-                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
             }
             
             .btn-magnetic {
@@ -76,9 +76,9 @@
         }
     </style>
     
-    <!-- Core Libraries (Loading in specific order) -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Core Libraries (Production Builds) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <!-- Animation & Icons -->
@@ -95,8 +95,6 @@
 
         // Initialize Lucide Icons
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
-            const iconRef = useRef(null);
-            
             useEffect(() => {
                 if (window.lucide) {
                     window.lucide.createIcons();
@@ -519,7 +517,7 @@
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> Unlimited scale</li>
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> Dedicated instance</li>
                             </ul>
-                            <a href="mailto:erik@synthinsight.labs" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Contact</a>
+                            <a href="mailto:erik@synthinsightlabs.com" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Contact</a>
                         </div>
                     </div>
                 </div>
@@ -553,7 +551,7 @@
             </footer>
         );
 
-        return (
+        const App = () => (
             <main>
                 <Navbar />
                 <Hero />
