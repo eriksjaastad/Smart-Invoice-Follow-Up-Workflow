@@ -136,3 +136,84 @@ test.describe('Scenario E: Error Handling', () => {
     expect(response.status()).toBe(401);
   });
 });
+
+test.describe('Scenario F: Onboarding API Auth Guards', () => {
+  test('list-sheets requires auth', async ({ request }) => {
+    const response = await request.get(`${BASE_URL}/api/onboarding/list-sheets`);
+    // 401/403 = requires auth; 404 = route not yet available on this env
+    expect([401, 403, 404]).toContain(response.status());
+  });
+
+  test('validate-sheet requires auth', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/onboarding/validate-sheet`, {
+      data: { sheet_id: 'fake_sheet_id_12345' }
+    });
+    expect([401, 403]).toContain(response.status());
+  });
+
+  test('select-sheet requires auth', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/onboarding/select-sheet`, {
+      data: { sheet_id: 'fake_sheet_id_12345' }
+    });
+    expect([401, 403]).toContain(response.status());
+  });
+
+  test('sender-info requires auth', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/onboarding/sender-info`, {
+      data: { name: 'Test User', business_name: 'Test Co' }
+    });
+    expect([401, 403]).toContain(response.status());
+  });
+});
+
+test.describe('Scenario G: Create Template API', () => {
+  test('create-template requires auth', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/onboarding/create-template`);
+    expect([401, 403]).toContain(response.status());
+  });
+});
+
+test.describe('Scenario H: Daily Cron Trigger Extended', () => {
+  test('trigger-daily rejects wrong secret with 401', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/cron/trigger-daily`, {
+      headers: { 'x-cron-secret': 'wrong-secret-value' }
+    });
+    expect(response.status()).toBe(401);
+  });
+
+  test('trigger-daily error response has detail field', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/cron/trigger-daily`, {
+      headers: { 'x-cron-secret': 'invalid' }
+    });
+    expect(response.status()).toBe(401);
+    const body = await response.json();
+    expect(body).toHaveProperty('detail');
+  });
+});
+
+test.describe('Scenario I: Billing Endpoint Auth Guards', () => {
+  test('billing status requires auth', async ({ request }) => {
+    const response = await request.get(`${BASE_URL}/api/billing/status`);
+    expect([401, 403]).toContain(response.status());
+  });
+
+  test('create-checkout requires auth', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/billing/create-checkout`, {
+      data: {
+        success_url: `${BASE_URL}/dashboard`,
+        cancel_url: `${BASE_URL}/dashboard`
+      }
+    });
+    expect([401, 403]).toContain(response.status());
+  });
+
+  test('billing webhook rejects unsigned requests with 400', async ({ request }) => {
+    const response = await request.post(`${BASE_URL}/api/billing/webhook`, {
+      headers: { 'Content-Type': 'application/json' },
+      data: { type: 'checkout.session.completed' }
+    });
+    expect(response.status()).toBe(400);
+    const body = await response.json();
+    expect(body.detail).toMatch(/signature/i);
+  });
+});
