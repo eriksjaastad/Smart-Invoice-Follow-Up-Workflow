@@ -57,16 +57,16 @@ No Google tokens touch our servers. Make.com handles OAuth.
 | Directory | Purpose |
 |-----------|---------|
 | `case-studies/` | Business research, pricing analysis, distribution strategy |
-| `Documents/guides/FIRST_SALE_GUIDE.md` | How to make the first $5 |
-| `Documents/reference/SALES_STRATEGY.md` | Comprehensive sales playbook |
-| `Documents/reference/GOOGLE_SHEET_TEMPLATE.md` | Invoice sheet column spec |
+| `.agent/rules/FIRST_SALE_GUIDE.md` | How to make the first $5 |
+| `.agent/rules/SALES_STRATEGY.md` | Comprehensive sales playbook |
+| `../.agent/rules/GOOGLE_SHEET_TEMPLATE.md` | Invoice sheet column spec |
 
 ### Governance (Synced — Do Not Edit)
 | File | Purpose |
 |------|---------|
 | `AGENTS.md` | Agent hierarchy and Dispatch Protocol |
 | `CLAUDE.md` | Execution rules (synced via agentsync) |
-| `Documents/REVIEWS_AND_GOVERNANCE_PROTOCOL.md` | Review checklist (synced via sync_governance.py) |
+| `.agent/rules/governance.md` | Review checklist (synced via sync_governance.py) |
 
 ### Kiro Specs
 | File | Purpose |
