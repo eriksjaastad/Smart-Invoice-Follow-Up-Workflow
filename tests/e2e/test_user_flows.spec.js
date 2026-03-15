@@ -16,7 +16,7 @@ test.describe('Scenario A: Landing Page', () => {
     });
 
     // Check hero section exists
-    const hero = page.locator('text=Automate your invoice').first();
+    const hero = page.locator('text=Follow-up is the').first();
     await expect(hero).toBeVisible({ timeout: 10000 });
 
     // Check pricing section
