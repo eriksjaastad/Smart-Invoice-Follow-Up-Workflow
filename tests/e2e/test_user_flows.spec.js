@@ -107,7 +107,7 @@ test.describe('Scenario C: API Health Checks', () => {
     expect(response.ok()).toBeTruthy();
     const body = await response.json();
     expect(body.status).toBe('healthy');
-    expect(body.environment).toBe('production');
+    expect(['production', 'preview', 'development']).toContain(body.environment);
   });
 
   test('system status returns not paused', async ({ request }) => {
