@@ -79,3 +79,15 @@ No Google tokens touch our servers. Make.com handles OAuth.
 
 **Phase:** Active development (backend built, frontend in progress)
 **Goal:** Ship MVP, get one paying customer, learn to sell.
+
+## CI / Automated Code Review
+
+Pull requests are automatically reviewed by Claude Sonnet via a [centralized reusable workflow](https://github.com/eriksjaastad/tools/blob/main/.github/workflows/claude-review-reusable.yml) hosted in the `tools` repo.
+
+**On every PR:**
+- Tests run (if any exist)
+- AI reviews the diff against project standards and governance protocol
+- Posts a sticky review comment and a `claude-review` commit status
+- Auto-merges on APPROVE, blocks on REQUEST_CHANGES
+
+See [tools repo](https://github.com/eriksjaastad/tools) for configuration details.
