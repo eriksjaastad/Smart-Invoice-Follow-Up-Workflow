@@ -4,7 +4,6 @@ Cron-triggered API routes.
 import logging
 from typing import Any
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +12,7 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
 from app.services.system_state import get_system_paused
+from app.services.daily_processing import process_user_invoices
 
 router = APIRouter(prefix="/api/cron", tags=["cron"])
 logger = logging.getLogger(__name__)
@@ -29,60 +29,58 @@ def _require_cron_secret(x_cron_secret: str | None) -> None:
 @router.post("/trigger-daily")
 async def trigger_daily_processing(
     db: AsyncSession = Depends(get_db),
-    x_cron_secret: str | None = Header(None)
+    x_cron_secret: str | None = Header(None),
 ) -> dict[str, Any]:
     """
-    Trigger Make.com Daily Processing for all active users.
+    Trigger daily invoice processing for all active users.
 
+    Processes each user's invoices directly via Google APIs.
     Protected by DIGEST_CRON_SECRET via x-cron-secret header.
     """
     _require_cron_secret(x_cron_secret)
 
-    if not settings.make_daily_processing_webhook_url:
-        raise HTTPException(status_code=503, detail="Make.com Daily Processing webhook URL missing")
-    if not settings.backend_url:
-        raise HTTPException(status_code=503, detail="BACKEND_URL not configured")
-
-    backend_url = settings.backend_url.rstrip("/")
     paused = await get_system_paused(db)
+    if paused:
+        return {"success": True, "message": "System is paused", "users_total": 0, "processed": 0}
 
+    # Get active users with a sheet and valid Google connection
     result = await db.execute(select(User).where(User.active == True))
-    users = result.scalars().all()
+    all_users = result.scalars().all()
+    eligible_users = [
+        u for u in all_users
+        if u.sheet_id
+        and u.google_refresh_token_encrypted
+        and not u.google_token_revoked
+    ]
 
-    sent = 0
+    processed = 0
     failed = 0
+    total_drafts = 0
+    total_invoices = 0
     errors: list[str] = []
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        for user in users:
-            invoice_limit = 3 if user.plan == "free" else 100
-            payload = {
-                "user_id": str(user.id),
-                "email": user.email,
-                "sender_name": user.name,
-                "business_name": user.business_name,
-                "sheet_id": user.sheet_id,
-                "active": user.active,
-                "paused": paused,
-                "backend_url": backend_url,
-                "plan": user.plan,
-                "invoice_limit": invoice_limit,
-            }
-            try:
-                response = await client.post(
-                    settings.make_daily_processing_webhook_url,
-                    json=payload,
-                )
-                response.raise_for_status()
-                sent += 1
-            except Exception as e:
+    for user in eligible_users:
+        try:
+            proc_result = await process_user_invoices(user, db)
+            total_drafts += proc_result.drafts_created
+            total_invoices += proc_result.invoices_checked
+            if proc_result.errors:
                 failed += 1
-                errors.append(f"{user.id}: {e}")
+                errors.append(f"{user.id}: {proc_result.errors}")
+            else:
+                processed += 1
+        except Exception as e:
+            failed += 1
+            errors.append(f"{user.id}: {e}")
+
+    await db.commit()
 
     return {
         "success": failed == 0,
-        "users_total": len(users),
-        "sent": sent,
+        "users_total": len(eligible_users),
+        "processed": processed,
         "failed": failed,
+        "drafts_created": total_drafts,
+        "invoices_checked": total_invoices,
         "errors": errors,
     }
