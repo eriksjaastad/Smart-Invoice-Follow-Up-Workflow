@@ -211,6 +211,23 @@ async def process_user_invoices(
             # Create Gmail draft
             create_draft(creds, client_email, subject, body_html)
 
+            # Increment counter IMMEDIATELY after draft creation, BEFORE
+            # update_row_cells — if the sheet update throws, the draft was
+            # still created and must count toward the limit (#5265).
+            drafts_this_run += 1
+            result.drafts_created += 1
+            logger.info(
+                f"Draft {drafts_this_run}/{invoice_limit} created for {row.get('Invoice_Number')}"
+            )
+
+            # Defensive safety cap: stop even if we somehow got here
+            # with drafts_this_run already at or past the limit.
+            if result.drafts_created >= invoice_limit:
+                logger.info(
+                    f"User {user.id}: safety cap reached ({result.drafts_created}/{invoice_limit}), stopping"
+                )
+                break
+
             # Update sheet: Last_Stage_Sent + Last_Sent_At
             update_row_cells(
                 creds,
@@ -222,9 +239,6 @@ async def process_user_invoices(
                 },
                 headers=headers,
             )
-
-            drafts_this_run += 1
-            result.drafts_created += 1
 
         except Exception as e:
             error_str = str(e)
