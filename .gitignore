@@ -112,3 +112,4 @@ backend/alembic/versions/*.pyc
 test-results/
 tests/e2e/screenshots/
 tests/e2e/report/
+tests/e2e/.auth/

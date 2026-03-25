@@ -1,11 +1,8 @@
 // @ts-check
 const { defineConfig } = require('@playwright/test');
 
-// Support multi-environment testing
-const BASE_URL = process.env.PREVIEW_URL
-  || (process.env.TEST_ENV === 'production'
-      ? 'https://smartinvoiceworkflow.com'
-      : 'https://smartinvoiceworkflow.com'); // default to prod
+// PREVIEW_URL for preview deployments, otherwise production
+const BASE_URL = process.env.PREVIEW_URL || 'https://smartinvoiceworkflow.com';
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
