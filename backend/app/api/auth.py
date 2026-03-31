@@ -165,8 +165,11 @@ async def logout(request: Request):
     """
     # In production, clear session cookie here
     
+    # Clear session
+    request.session.clear()
+
     # Redirect to Auth0 logout
-    return_to = settings.cors_origins.split(',')[0]  # Redirect to first allowed origin
+    return_to = settings.frontend_url.rstrip("/")
     logout_url = f"https://{settings.auth0_domain}/v2/logout?returnTo={return_to}&client_id={settings.auth0_client_id}"
     
     return RedirectResponse(url=logout_url)

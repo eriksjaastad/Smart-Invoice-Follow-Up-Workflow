@@ -49,12 +49,12 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_price_id: str = ""
 
-    # Make.com Webhook URLs
-    make_daily_processing_webhook_url: str = ""
-    make_list_sheets_webhook_url: str = ""
-    make_validate_sheet_webhook_url: str = ""
-    make_create_template_webhook_url: str = ""
-    x_make_api_key: str = ""
+    # Google OAuth (direct API — replaces Make.com)
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = ""
+    google_token_encryption_key: str = ""  # Fernet key for encrypting refresh tokens
+    google_api_key: str = ""  # API key for Google Picker JS (browser-side)
 
     # Resend
     resend_api_key: str = ""

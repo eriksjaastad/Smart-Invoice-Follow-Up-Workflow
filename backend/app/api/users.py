@@ -11,7 +11,6 @@ from sqlalchemy import select
 from typing import Optional
 from uuid import UUID
 
-from app.core.config import settings
 from app.core.auth import require_auth, verify_make_api_key
 from app.db.session import get_db
 from app.models.user import User
@@ -19,6 +18,14 @@ from app.schemas.user import User as UserSchema, UserUpdate, UserConfig
 from app.services.system_state import get_system_paused
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+
+@router.get("/me", response_model=UserSchema)
+async def get_current_user_profile(
+    current_user: User = Depends(require_auth),
+):
+    """Get the authenticated user's profile."""
+    return current_user
 
 
 @router.get("/{user_id}/config", response_model=UserConfig)
@@ -63,20 +70,17 @@ async def get_user_config(
     # Calculate invoice_limit based on plan
     invoice_limit = 3 if user.plan == "free" else 100
     paused = await get_system_paused(db)
-    backend_url = settings.backend_url.rstrip("/") if settings.backend_url else ""
-    
-    # Return config
+
     return UserConfig(
         user_id=user.id,
         email=user.email,
         sender_name=user.name,
         business_name=user.business_name,
-        sheet_id=user.sheet_id,
+        sheet_id=user.sheet_id or "",
         active=user.active,
         paused=paused,
-        backend_url=backend_url,
         plan=user.plan,
-        invoice_limit=invoice_limit
+        invoice_limit=invoice_limit,
     )
 
 
