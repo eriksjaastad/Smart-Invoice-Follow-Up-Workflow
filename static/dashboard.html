@@ -63,19 +63,40 @@
                         </div>
                     </div>
                         <!-- Setup Required Warning -->
-            <div x-show="!user.sheet_id" class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div x-show="setupMissing.length > 0" class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8 shadow-sm flex flex-col gap-5">
                 <div class="flex items-start gap-4">
                     <div class="bg-amber-100 p-2 rounded-lg text-amber-600 mt-1">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     </div>
                     <div>
                         <h3 class="text-lg font-bold text-amber-800">Setup is incomplete</h3>
-                        <p class="text-amber-700 text-sm mt-1">You need to connect your Google Sheet to start automating your follow-ups.</p>
+                        <p class="text-amber-700 text-sm mt-1">
+                            We need a few missing inputs before automation can resume. Follow the steps below to recover safely.
+                        </p>
                     </div>
                 </div>
-                <a href="/onboarding.html" class="bg-amber-500 hover:bg-amber-600 text-white font-medium px-5 py-2.5 rounded-lg transition-colors shadow-sm whitespace-nowrap">
-                    Complete Setup
-                </a>
+                <div class="bg-white/70 border border-amber-100 rounded-lg p-4 text-sm text-amber-900">
+                    <p class="font-semibold mb-2">Deterministic recovery path</p>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Connect your Google account if prompted.</li>
+                        <li>
+                            Provide your Google Sheet ID.
+                            <span x-show="!user.sheet_id" class="font-semibold text-amber-800">Required</span>
+                        </li>
+                        <li>
+                            Confirm sender name and business name.
+                            <span x-show="!user.name || !user.business_name" class="font-semibold text-amber-800">Required</span>
+                        </li>
+                    </ol>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <p class="text-xs text-amber-700">
+                        Missing: <span x-text="setupMissing.join(', ')"></span>
+                    </p>
+                    <a href="/onboarding.html?resume=1" class="bg-amber-500 hover:bg-amber-600 text-white font-medium px-5 py-2.5 rounded-lg transition-colors shadow-sm whitespace-nowrap">
+                        Resume Setup
+                    </a>
+                </div>
             </div>
 
             <!-- "Heartbeat" Status UI -->
@@ -184,12 +205,14 @@
             return {
                 user: {},
                 loading: true,
+                setupMissing: [],
 
                 async init() {
                     try {
                         const response = await fetch('/api/auth/me', { credentials: 'include' });
                         if (response.ok) {
                             this.user = await response.json();
+                            this.refreshSetupStatus();
                         } else {
                             window.location.href = '/login.html';
                         }
@@ -199,6 +222,16 @@
                     } finally {
                         this.loading = false;
                     }
+                },
+                refreshSetupStatus() {
+                    const missing = [];
+                    if (!this.user.sheet_id) {
+                        missing.push('Google Sheet ID');
+                    }
+                    if (!this.user.name || !this.user.business_name) {
+                        missing.push('Sender details');
+                    }
+                    this.setupMissing = missing;
                 },
 
                 formatDate(dateString) {

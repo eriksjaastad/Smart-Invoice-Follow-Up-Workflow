@@ -20,6 +20,14 @@ from app.services.system_state import get_system_paused
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
+def get_missing_onboarding_fields(user: User) -> list[str]:
+    missing: list[str] = []
+    if not user.sheet_id:
+        missing.append("sheet_id")
+    if not user.name or not user.business_name:
+        missing.append("sender_info")
+    return missing
+
 
 @router.get("/{user_id}/config", response_model=UserConfig)
 async def get_user_config(
@@ -59,6 +67,25 @@ async def get_user_config(
     # Return 404 if user not found or inactive
     if not user or not user.active:
         raise HTTPException(status_code=404, detail="User not found or inactive")
+
+    missing_fields = get_missing_onboarding_fields(user)
+    if missing_fields:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "User onboarding is incomplete. Required inputs are missing.",
+                "missing_fields": missing_fields,
+                "recovery": {
+                    "next_step": "complete_onboarding",
+                    "action_url": "/onboarding.html?resume=1",
+                    "steps": [
+                        "Connect your Google account if prompted.",
+                        "Provide a Google Sheet ID.",
+                        "Confirm sender name and business name."
+                    ]
+                }
+            }
+        )
     
     # Calculate invoice_limit based on plan
     invoice_limit = 3 if user.plan == "free" else 100

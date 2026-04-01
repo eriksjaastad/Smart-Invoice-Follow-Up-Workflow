@@ -50,6 +50,12 @@
                     <p class="text-sm font-medium text-slate-600">Processing...</p>
                 </div>
 
+                <!-- Resume Banner -->
+                <div x-show="resumeMode" class="px-6 py-4 bg-amber-50 border-b border-amber-100 text-amber-900 text-sm">
+                    <strong class="font-semibold">Resume setup:</strong>
+                    We'll guide you to the exact missing step so recovery is deterministic.
+                </div>
+
                 <!-- Step 1: Google Connection -->
                 <div x-show="currentStep === 1" x-transition.opacity class="p-8 sm:p-10">
                     <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
@@ -190,9 +196,46 @@
                 businessName: '',
                 completed: false,
                 isProcessing: false,
+                resumeMode: false,
+                user: {},
 
                 async init() {
-                    // Quick check if they are authenticated, if not, wait for intercept
+                    const params = new URLSearchParams(window.location.search);
+                    if (!params.has('resume')) {
+                        return;
+                    }
+                    this.resumeMode = true;
+                    this.isProcessing = true;
+                    try {
+                        const response = await fetch('/api/auth/me', { credentials: 'include' });
+                        if (!response.ok) {
+                            window.location.href = '/login.html';
+                            return;
+                        }
+                        this.user = await response.json();
+                        this.sheetId = this.user.sheet_id || '';
+                        this.senderName = this.user.name || '';
+                        this.businessName = this.user.business_name || '';
+
+                        const resumeStep = this.getResumeStep();
+                        if (resumeStep) {
+                            this.currentStep = resumeStep;
+                        }
+                    } catch (error) {
+                        console.error('Failed to resume onboarding', error);
+                    } finally {
+                        this.isProcessing = false;
+                    }
+                },
+                getResumeStep() {
+                    if (!this.user.sheet_id) {
+                        return 2;
+                    }
+                    if (!this.user.name || !this.user.business_name) {
+                        return 3;
+                    }
+                    window.location.href = '/dashboard.html';
+                    return null;
                 },
 
                 async connectGoogle() {
