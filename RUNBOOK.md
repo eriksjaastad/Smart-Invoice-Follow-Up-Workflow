@@ -232,6 +232,15 @@ This runbook is for **operating SIW safely** during MVP: diagnosing failures, pr
 
 ---
 
+## 5.1 Sandbox soak validation (4 hours)
+
+1. Set `SOAK_METRICS_PATH=artifacts/soak/cron_soak_metrics.jsonl`.
+2. Trigger `/api/cron/trigger-daily` on the normal schedule for 4 hours.
+3. Confirm the JSONL artifact contains `cron_run_start`, `cron_user_attempt`, and `cron_run_end` events.
+4. Archive the artifact with the sandbox validation report.
+
+---
+
 ## 6) Postmortem template (keep it short)
 
 - What happened?

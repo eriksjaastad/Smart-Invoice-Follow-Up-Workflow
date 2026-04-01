@@ -65,6 +65,11 @@ class Settings(BaseSettings):
 
     # System control
     system_control_secret: str = ""
+
+    # Cron soak instrumentation
+    cron_user_max_attempts: int = 2
+    cron_user_retry_delay_seconds: float = 2.0
+    soak_metrics_path: str = "artifacts/soak/cron_soak_metrics.jsonl"
     
     @property
     def cors_origins_list(self) -> List[str]:
