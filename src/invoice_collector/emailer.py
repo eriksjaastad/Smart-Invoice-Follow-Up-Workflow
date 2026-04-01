@@ -3,13 +3,15 @@ Gmail client for creating email drafts (NOT auto-sending)
 Handles template rendering and draft creation via Gmail API
 """
 import base64
+import json
 import re
 import time
 import logging
+from datetime import date
 from email.mime.text import MIMEText
 from pathlib import Path
 from string import Template
-from typing import Tuple
+from typing import Tuple, Set
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -52,6 +54,59 @@ def _get_gmail_service():
             token.write(creds.to_json())
 
     return build("gmail", "v1", credentials=creds)
+
+
+def _normalize_email(address: str) -> str:
+    return address.strip().lower()
+
+
+def _load_email_ledger(day: str) -> Set[str]:
+    ledger_path = settings.DRAFT_LEDGER_PATH
+    if not ledger_path.exists():
+        return set()
+    seen: Set[str] = set()
+    with ledger_path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if payload.get("date") != day:
+                continue
+            email = payload.get("email")
+            if not isinstance(email, str):
+                continue
+            seen.add(_normalize_email(email))
+    return seen
+
+
+def _record_email_ledger(
+    *,
+    to_email: str,
+    day: str,
+    draft_id: str,
+    invoice_id: str | None = None,
+) -> None:
+    ledger_path = settings.DRAFT_LEDGER_PATH
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "date": day,
+        "email": _normalize_email(to_email),
+        "draft_id": draft_id,
+    }
+    if invoice_id:
+        payload["invoice_id"] = invoice_id
+    with ledger_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
+def has_email_been_contacted_today(to_email: str, day: str | None = None) -> bool:
+    if day is None:
+        day = date.today().strftime("%Y-%m-%d")
+    return _normalize_email(to_email) in _load_email_ledger(day)
 
 
 def render_template(template_path: Path, context: dict) -> Tuple[str, str]:
@@ -108,7 +163,13 @@ def template_path_for(stage: int) -> Path:
     return settings.TEMPLATES_DIR / f"stage_{stage:02d}.txt"
 
 
-def create_draft(to_email: str, subject: str, body: str, max_retries: int = None) -> dict:
+def create_draft(
+    to_email: str,
+    subject: str,
+    body: str,
+    max_retries: int = None,
+    invoice_id: str | None = None,
+) -> dict:
     """
     Create a Gmail draft (does NOT send the email)
     Includes exponential backoff for rate limiting (429 errors)
@@ -124,6 +185,10 @@ def create_draft(to_email: str, subject: str, body: str, max_retries: int = None
     """
     if max_retries is None:
         max_retries = settings.MAX_RETRIES
+
+    today_key = date.today().strftime("%Y-%m-%d")
+    if has_email_been_contacted_today(to_email, today_key):
+        raise ValueError(f"Email already drafted today for {to_email}")
 
     service = _get_gmail_service()
 
@@ -141,6 +206,12 @@ def create_draft(to_email: str, subject: str, body: str, max_retries: int = None
     for attempt in range(max_retries + 1):
         try:
             draft = service.users().drafts().create(userId="me", body=draft_body).execute()
+            _record_email_ledger(
+                to_email=to_email,
+                day=today_key,
+                draft_id=str(draft.get("id", "")),
+                invoice_id=invoice_id,
+            )
             return draft
 
         except HttpError as e:
@@ -193,4 +264,4 @@ def create_draft_from_template(
     subject, body = render_template(template_file, context)
 
     # Create draft
-    return create_draft(to_email, subject, body)
+    return create_draft(to_email, subject, body, invoice_id=invoice_id)
