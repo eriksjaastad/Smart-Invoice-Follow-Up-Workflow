@@ -7,6 +7,7 @@ Coordinates the entire workflow:
 3. Create Gmail drafts for invoices that need reminders
 4. Write back tracking data to Google Sheets
 """
+import json
 import logging
 from datetime import date
 from typing import List
@@ -25,6 +26,7 @@ class ErrorType(Enum):
     """Types of errors that can occur during processing"""
     SKIP_INVALID_DATA = "skip_invalid_data"
     DRAFT_FAILED = "draft_failed"
+    DRAFT_LIMIT_REACHED = "draft_limit_reached"
     WRITE_BACK_FAILED = "write_back_failed"
     READ_FAILED = "read_failed"
 
@@ -43,6 +45,55 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+
+def _ledger_key(invoice_id: str, stage: int, day: str) -> str:
+    return f"{invoice_id}:{stage}:{day}"
+
+
+def _load_draft_ledger(day: str) -> set[str]:
+    ledger_path = settings.DRAFT_LEDGER_PATH
+    if not ledger_path.exists():
+        return set()
+    seen: set[str] = set()
+    with ledger_path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if payload.get("date") != day:
+                continue
+            invoice_id = payload.get("invoice_id")
+            stage = payload.get("stage")
+            if not isinstance(invoice_id, str) or not isinstance(stage, int):
+                continue
+            seen.add(_ledger_key(invoice_id, stage, day))
+    return seen
+
+
+def _record_draft_ledger(
+    *,
+    invoice_id: str,
+    stage: int,
+    day: str,
+    draft_id: str,
+    client_email: str,
+) -> None:
+    ledger_path = settings.DRAFT_LEDGER_PATH
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "invoice_id": invoice_id,
+        "stage": stage,
+        "date": day,
+        "draft_id": draft_id,
+        "client_email": client_email,
+    }
+    with ledger_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
 
 def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
@@ -64,6 +115,7 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
         Tuple of (drafts_created, errors_encountered)
     """
     today = date.today()
+    today_key = today.strftime("%Y-%m-%d")
     logger.info(f"Starting daily invoice collection run for {today}")
 
     # Validate configuration
@@ -100,6 +152,7 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
     drafts_created = []
     updates_to_write = []
     errors = []
+    ledger_seen = _load_draft_ledger(today_key)
 
     for invoice in overdue_invoices:
         try:
@@ -114,6 +167,28 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
                     f"last_stage={invoice.last_stage_sent}, last_sent={invoice.last_sent_at}"
                 )
                 continue
+            ledger_key = _ledger_key(invoice.invoice_id, stage, today_key)
+            if ledger_key in ledger_seen:
+                logger.warning(
+                    f"Skipping {invoice.invoice_id}: draft already created today "
+                    f"(stage={stage}, date={today_key})"
+                )
+                continue
+            if len(drafts_created) >= settings.MAX_DRAFTS_PER_RUN:
+                error_msg = (
+                    f"Draft limit reached ({settings.MAX_DRAFTS_PER_RUN}). "
+                    f"Halting further draft creation."
+                )
+                logger.error(error_msg)
+                errors.append(
+                    ProcessingError(
+                        invoice_id=invoice.invoice_id,
+                        client_name=invoice.client_name,
+                        error_message=error_msg,
+                        error_type=ErrorType.DRAFT_LIMIT_REACHED,
+                    )
+                )
+                break
 
             # Build context for template
             context = {
@@ -144,6 +219,14 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
                     currency=invoice.currency,
                     due_date=invoice.due_date.strftime("%b %d, %Y"),
                 )
+                _record_draft_ledger(
+                    invoice_id=invoice.invoice_id,
+                    stage=stage,
+                    day=today_key,
+                    draft_id=str(draft.get("id", "")),
+                    client_email=invoice.client_email,
+                )
+                ledger_seen.add(ledger_key)
                 logger.info(
                     f"Created draft {draft['id']} for {invoice.invoice_id} "
                     f"(Stage {stage}d) to {invoice.client_email}"
@@ -151,7 +234,7 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
 
                 # Track for write-back
                 updates_to_write.append(
-                    (invoice.invoice_id, stage, today.strftime("%Y-%m-%d"))
+                    (invoice.invoice_id, stage, today_key)
                 )
 
             # Track what we created
