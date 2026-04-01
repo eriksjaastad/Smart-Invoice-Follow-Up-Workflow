@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import datetime
 import stripe
 
 from app.core.config import settings
@@ -88,6 +89,11 @@ async def create_checkout_session(
                 }
             ],
             mode="subscription",
+            subscription_data={
+                "metadata": {
+                    "user_id": str(current_user.id),
+                }
+            },
             success_url=request.success_url,
             cancel_url=request.cancel_url,
             metadata={
@@ -176,22 +182,36 @@ async def stripe_webhook(
         raise HTTPException(status_code=400, detail="Invalid signature")
     
     # Handle the event
+    event_created = datetime.utcfromtimestamp(event["created"])
+
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        await handle_checkout_completed(session, db)
+        await handle_checkout_completed(session, db, event_created)
     
     elif event["type"] == "customer.subscription.deleted":
         subscription = event["data"]["object"]
-        await handle_subscription_deleted(subscription, db)
+        await handle_subscription_deleted(subscription, db, event_created)
     
     elif event["type"] == "customer.subscription.updated":
         subscription = event["data"]["object"]
-        await handle_subscription_updated(subscription, db)
+        await handle_subscription_updated(subscription, db, event_created)
     
     return {"status": "success"}
 
+def _should_apply_billing_event(user: User, event_created: datetime) -> bool:
+    """
+    Resolution policy for out-of-order billing events.
 
-async def handle_checkout_completed(session: dict, db: AsyncSession):
+    We only apply events that are newer than the last applied billing event.
+    This makes repeated or out-of-order webhooks idempotent and deterministic.
+    """
+    if user.billing_last_event_at is None:
+        return True
+
+    return event_created > user.billing_last_event_at
+
+
+async def handle_checkout_completed(session: dict, db: AsyncSession, event_created: datetime):
     """
     Handle successful checkout - upgrade user to paid plan.
 
@@ -209,16 +229,19 @@ async def handle_checkout_completed(session: dict, db: AsyncSession):
 
     if not user:
         return  # User not found, skip
+    
+    if not _should_apply_billing_event(user, event_created):
+        return
 
     # Update user to paid plan
     user.plan = "paid"
     user.stripe_customer_id = session["customer"]
     user.stripe_subscription_id = session["subscription"]
+    user.billing_last_event_at = event_created
 
     await db.commit()
 
-
-async def handle_subscription_deleted(subscription: dict, db: AsyncSession):
+async def handle_subscription_deleted(subscription: dict, db: AsyncSession, event_created: datetime):
     """
     Handle subscription cancellation - downgrade user to free plan.
 
@@ -233,16 +256,33 @@ async def handle_subscription_deleted(subscription: dict, db: AsyncSession):
     user = result.scalar_one_or_none()
 
     if not user:
-        return  # User not found, skip
+        # Fallback: try to resolve via customer id or metadata (if available)
+        customer_id = subscription.get("customer")
+        metadata_user_id = subscription.get("metadata", {}).get("user_id")
+        if customer_id:
+            result = await db.execute(
+                select(User).where(User.stripe_customer_id == customer_id)
+            )
+            user = result.scalar_one_or_none()
+        if not user and metadata_user_id:
+            result = await db.execute(
+                select(User).where(User.id == metadata_user_id)
+            )
+            user = result.scalar_one_or_none()
+        if not user:
+            return  # User not found, skip
+    
+    if not _should_apply_billing_event(user, event_created):
+        return
 
     # Downgrade to free plan
     user.plan = "free"
     user.stripe_subscription_id = None
+    user.billing_last_event_at = event_created
 
     await db.commit()
 
-
-async def handle_subscription_updated(subscription: dict, db: AsyncSession):
+async def handle_subscription_updated(subscription: dict, db: AsyncSession, event_created: datetime):
     """
     Handle subscription update.
 
@@ -257,7 +297,24 @@ async def handle_subscription_updated(subscription: dict, db: AsyncSession):
     user = result.scalar_one_or_none()
 
     if not user:
-        return  # User not found, skip
+        # Fallback: try to resolve via customer id or metadata (if available)
+        customer_id = subscription.get("customer")
+        metadata_user_id = subscription.get("metadata", {}).get("user_id")
+        if customer_id:
+            result = await db.execute(
+                select(User).where(User.stripe_customer_id == customer_id)
+            )
+            user = result.scalar_one_or_none()
+        if not user and metadata_user_id:
+            result = await db.execute(
+                select(User).where(User.id == metadata_user_id)
+            )
+            user = result.scalar_one_or_none()
+        if not user:
+            return  # User not found, skip
+
+    if not _should_apply_billing_event(user, event_created):
+        return
 
     # Update subscription status based on Stripe status
     if subscription["status"] == "active":
@@ -265,6 +322,7 @@ async def handle_subscription_updated(subscription: dict, db: AsyncSession):
     else:
         # Subscription is paused, cancelled, or past_due
         user.plan = "free"
+    user.billing_last_event_at = event_created
 
     await db.commit()
 
@@ -309,4 +367,3 @@ async def get_billing_status(
         stripe_subscription_id=current_user.stripe_subscription_id,
         customer_portal_url=customer_portal_url
     )
-

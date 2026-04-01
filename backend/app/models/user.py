@@ -47,6 +47,7 @@ class User(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.utcnow(), nullable=False)
     last_run_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    billing_last_event_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.utcnow(),
@@ -68,4 +69,3 @@ class User(Base):
     
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email}, plan={self.plan})>"
-
