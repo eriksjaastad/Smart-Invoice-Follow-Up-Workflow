@@ -13,7 +13,11 @@ Dependencies (in pyproject.toml):
     pytest-asyncio, httpx, aiosqlite
 """
 import sys
+import os
 from pathlib import Path
+
+# Ensure required settings for tests are present before app import
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 # Add backend to path so `from app.x import y` works
 sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))

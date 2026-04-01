@@ -1,0 +1,7 @@
+resources:
+  - name: Resend
+    purpose: Transactional digest and notification emails
+    url: https://resend.com
+  - name: Google Workspace Gmail API
+    purpose: Send daily ops digest via delegated mailbox
+    url: https://developers.google.com/gmail/api

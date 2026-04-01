@@ -63,6 +63,14 @@ class Settings(BaseSettings):
     # Digest Cron
     digest_cron_secret: str = ""
 
+    # Google Workspace (delegated Gmail sending)
+    google_workspace_service_account_file: str = ""
+    google_workspace_delegated_user: str = ""
+
+    # Daily digest (internal ops)
+    daily_digest_recipient: str = "help@smartinvoiceworkflow.com"
+    daily_digest_sender: str = ""
+
     # System control
     system_control_secret: str = ""
     

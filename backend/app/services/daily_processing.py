@@ -18,10 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.job_history import JobHistory
 from app.models.user import User
 from app.services.escalation import days_overdue, stage_for, should_send_draft
-from app.services.email_templates import get_subject, get_body_html
-from app.services.google_tokens import get_google_credentials
-from app.services.google_sheets import read_invoice_rows, update_row_cells, validate_sheet_columns
-from app.services.google_gmail import create_draft
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +103,12 @@ async def process_user_invoices(
     """
     if today is None:
         today = date.today()
+
+    # Local imports keep test-only environments from requiring Google modules.
+    from app.services.email_templates import get_subject, get_body_html
+    from app.services.google_tokens import get_google_credentials
+    from app.services.google_sheets import read_invoice_rows, update_row_cells, validate_sheet_columns
+    from app.services.google_gmail import create_draft
 
     start_time = time.time()
     result = ProcessingResult(user_id=user.id)

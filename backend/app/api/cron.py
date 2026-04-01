@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.services.system_state import get_system_paused
 from app.services.daily_processing import process_user_invoices
+from app.services.digest import send_daily_ops_digest
 
 router = APIRouter(prefix="/api/cron", tags=["cron"])
 logger = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ async def trigger_daily_processing(
 
     await db.commit()
 
-    return {
+    response_payload = {
         "success": failed == 0,
         "users_total": len(eligible_users),
         "processed": processed,
@@ -84,3 +85,7 @@ async def trigger_daily_processing(
         "invoices_checked": total_invoices,
         "errors": errors,
     }
+
+    send_daily_ops_digest(response_payload)
+
+    return response_payload

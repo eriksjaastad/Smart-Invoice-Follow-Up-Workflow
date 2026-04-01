@@ -4,7 +4,7 @@ Weekly digest email service.
 Provides functions for calculating digest data and sending weekly summary emails.
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Optional
@@ -19,6 +19,8 @@ from app.core.config import settings
 from app.models.user import User
 from app.models.job_history import JobHistory
 from app.schemas.digest import DigestData
+from app.services.google_workspace import GoogleWorkspaceConfigError, send_delegated_email
+from app.services.venture_workflow import record_workflow_event
 
 logger = logging.getLogger(__name__)
 
@@ -157,3 +159,73 @@ async def send_digest_email(digest_data: DigestData) -> bool:
         logger.error(f"Failed to send digest email to {digest_data.user_email}: {str(e)}")
         return False
 
+
+def send_daily_ops_digest(summary: dict) -> bool:
+    """
+    Send the daily ops digest to the internal help desk via delegated Gmail.
+
+    Args:
+        summary: Dict with daily processing counts and errors.
+
+    Returns:
+        True if email sent successfully, False otherwise.
+    """
+    recipient = settings.daily_digest_recipient
+    if not recipient:
+        logger.warning("Daily digest recipient not configured; skipping send")
+        record_workflow_event(
+            event="daily_digest_send",
+            status="skipped",
+            details={"reason": "missing_recipient"},
+        )
+        return False
+
+    date_label = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    subject = f"Daily Smart Invoice Digest ({date_label})"
+
+    html_body = f"""
+    <html>
+      <body>
+        <h2>Daily Processing Summary</h2>
+        <ul>
+          <li>Users total: {summary.get('users_total', 0)}</li>
+          <li>Processed: {summary.get('processed', 0)}</li>
+          <li>Failed: {summary.get('failed', 0)}</li>
+          <li>Drafts created: {summary.get('drafts_created', 0)}</li>
+          <li>Invoices checked: {summary.get('invoices_checked', 0)}</li>
+        </ul>
+        <p>Errors:</p>
+        <pre>{summary.get('errors', [])}</pre>
+      </body>
+    </html>
+    """
+
+    try:
+        response = send_delegated_email(
+            subject=subject,
+            html_body=html_body,
+            to_emails=recipient,
+            sender=settings.daily_digest_sender or None,
+        )
+        record_workflow_event(
+            event="daily_digest_send",
+            status="success",
+            details={"recipient": recipient, "message_id": response.get("id")},
+        )
+        return True
+    except GoogleWorkspaceConfigError as exc:
+        logger.warning("Daily digest skipped (workspace config): %s", exc)
+        record_workflow_event(
+            event="daily_digest_send",
+            status="skipped",
+            details={"reason": "workspace_config", "error": str(exc)},
+        )
+        return False
+    except Exception as exc:
+        logger.error("Daily digest send failed: %s", exc)
+        record_workflow_event(
+            event="daily_digest_send",
+            status="failed",
+            details={"recipient": recipient, "error": str(exc)},
+        )
+        return False
