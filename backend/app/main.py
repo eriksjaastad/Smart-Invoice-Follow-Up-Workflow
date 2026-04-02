@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.db.session import engine, Base
+from app.db.session import Base
 
 
 @asynccontextmanager

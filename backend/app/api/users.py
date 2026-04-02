@@ -2,7 +2,7 @@
 User management API routes.
 
 Provides endpoints for:
-- GET /api/users/{user_id}/config - Fetch user config for Make.com scenarios
+- GET /api/users/{user_id}/config - Fetch user config for daily processing
 - PATCH /api/users/{user_id} - Update user profile
 """
 from fastapi import APIRouter, Depends, HTTPException, Header
@@ -11,7 +11,7 @@ from sqlalchemy import select
 from typing import Optional
 from uuid import UUID
 
-from app.core.auth import require_auth, verify_make_api_key
+from app.core.auth import require_auth
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import User as UserSchema, UserUpdate, UserConfig
@@ -32,30 +32,12 @@ async def get_current_user_profile(
 async def get_user_config(
     user_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_make_api_key)
+    current_user: User = Depends(require_auth),
 ):
     """
-    Get user configuration for Make.com scenarios.
-    
-    This endpoint is called by Make.com scenarios at runtime to fetch:
-    - sheet_id: Google Sheet ID to process
-    - sender_name: User's name for email signatures
-    - business_name: Business name for email content
-    - plan: "free" or "paid"
-    - invoice_limit: 3 for free tier, 100 for paid tier
-    
-    Authentication: Requires MAKE_WEBHOOK_API_KEY in Authorization header
-    
-    Args:
-        user_id: UUID of the user
-        db: Database session
-        
-    Returns:
-        UserConfig with sheet_id, sender_name, business_name, plan, invoice_limit
-        
-    Raises:
-        HTTPException 404: If user not found or inactive
-        HTTPException 401: If API key is invalid
+    Get user configuration for daily processing.
+
+    Returns sheet_id, sender_name, business_name, plan, and invoice_limit.
     """
     # Fetch user from database
     result = await db.execute(
