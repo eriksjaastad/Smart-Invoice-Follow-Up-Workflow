@@ -12,7 +12,7 @@ from app.db.session import Base
 
 
 class JobHistory(Base):
-    """Job history model for tracking Make.com scenario runs."""
+    """Job history model for tracking invoice processing runs."""
     
     __tablename__ = "job_history"
     

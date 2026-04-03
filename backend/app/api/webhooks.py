@@ -2,15 +2,15 @@
 Webhook API routes for external integrations.
 
 Provides endpoints for:
-- POST /api/webhooks/make-results - Receive job results from Make.com scenarios
+- POST /api/webhooks/job-results - Receive job results from processing runs
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime, date
 
-from app.core.auth import verify_make_api_key
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
 from app.models.job_history import JobHistory
@@ -23,43 +23,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 
 
-@router.post("/make-results", response_model=MakeWebhookResponse)
-async def receive_make_results(
+@router.post("/job-results", response_model=MakeWebhookResponse)
+async def receive_job_results(
     payload: MakeWebhookRequest,
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_make_api_key)
+    x_cron_secret: str = Header(...),
 ):
     """
-    Receive job results from Make.com scenarios.
+    Receive job results from processing runs.
 
-    Make.com scenarios POST results after processing invoices:
-    - user_id: UUID of the user
-    - drafts_created: Number of Gmail drafts created
-    - invoices_checked: Number of invoices processed
-    - total_outstanding_amount: Sum of all unpaid invoice amounts
-    - errors: Optional list of error messages
-    - duration_ms: Optional execution time in milliseconds
-
-    This endpoint:
-    1. Validates the user exists and is active
-    2. Checks for existing job_history record for today (idempotency)
-    3. Updates existing record or creates new one
-    4. Updates the user's last_run_at timestamp
-
-    Authentication: Requires MAKE_WEBHOOK_API_KEY in Authorization header
+    Accepts results after invoice processing and records them to job_history.
+    Authentication: Requires x-cron-secret header.
 
     Args:
-        payload: Webhook payload from Make.com
+        payload: Job result payload
         db: Database session
 
     Returns:
         Success confirmation with job_id
-
-    Raises:
-        HTTPException 400: If data is invalid
-        HTTPException 404: If user not found or inactive
-        HTTPException 401: If API key is invalid
     """
+    if x_cron_secret != settings.digest_cron_secret:
+        raise HTTPException(status_code=401, detail="Invalid cron secret")
+
     # Validate user exists and is active
     result = await db.execute(
         select(User).where(User.id == payload.user_id)

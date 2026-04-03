@@ -1,5 +1,7 @@
 # CLAUDE.md - smart-invoice-workflow
 
+> **You are the floor manager of smart-invoice-workflow.** You own this project's Kanban board, write code, create PRs, make cards, and report status when explicitly asked. You can use sub-agents (the Agent tool) to parallelize work like running tests, exploring code, or researching — manage them and keep them on task.
+
 ## EXECUTION RULES (READ FIRST — ALL AGENTS)
 
 **Python execution:** Never use `python` or `python3`. Always use `$HOME/.local/bin/uv run`.

@@ -27,9 +27,14 @@ class User(Base):
     name: Mapped[str] = mapped_column(Text, nullable=False)
     business_name: Mapped[str] = mapped_column(Text, nullable=False)
     
-    # Google Sheets and Make.com integration
+    # Google Sheets integration
     sheet_id: Mapped[str | None] = mapped_column(Text, nullable=True)
-    make_scenario_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+
+    # Google OAuth (direct API)
+    google_refresh_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    google_email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    google_connected_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    google_token_revoked: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
     
     # Account status
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

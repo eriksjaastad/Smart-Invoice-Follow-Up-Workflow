@@ -186,28 +186,4 @@ def require_auth(user: User = Depends(get_current_active_user)) -> User:
     return user
 
 
-def verify_make_api_key(authorization: Optional[str] = Header(None)) -> None:
-    """
-    Verify Make.com API key for webhook/config endpoints.
-
-    This dependency validates that requests from Make.com scenarios include
-    the correct API key in the Authorization header.
-
-    Args:
-        authorization: Authorization header value (format: "Bearer <api_key>")
-
-    Raises:
-        HTTPException: If API key is missing or invalid
-    """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
-
-    # Expected format: "Bearer <api_key>"
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(status_code=401, detail="Invalid Authorization header format")
-
-    api_key = parts[1]
-    if api_key != settings.x_make_api_key:
-        raise HTTPException(status_code=401, detail="Invalid API key")
 

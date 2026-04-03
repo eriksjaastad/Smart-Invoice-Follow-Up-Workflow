@@ -11,8 +11,8 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class JobLogRequest(BaseModel):
     """
-    Schema for Make.com webhook payload when posting job results.
-    POST /api/webhooks/make-results
+    Schema for webhook payload when posting job results.
+    POST /api/webhooks/job-results
     """
     user_id: UUID
     invoices_checked: int = Field(..., ge=0, description="Number of invoices checked")

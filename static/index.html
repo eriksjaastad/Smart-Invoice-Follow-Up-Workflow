@@ -253,7 +253,7 @@
             const phrases = [
                 "SYNCING_WITH_GSHEET...",
                 "AUTH0_HANDSHAKE_OK",
-                "MAKE_FLOW_ACTIVE",
+                "GOOGLE_OAUTH_CONNECTED",
                 "READY_FOR_AUTOMATION"
             ];
             const [phraseIndex, setPhraseIndex] = useState(0);
@@ -353,7 +353,7 @@
                         <TelemetryTypewriter />
                         <div>
                             <h3 className="font-heading font-extrabold text-2xl mb-4">Zero-Touch Integration</h3>
-                            <p className="text-charcoal/60 font-heading">Make.com handles the OAuth. Your keys never touch our servers. Pure security.</p>
+                            <p className="text-charcoal/60 font-heading">Direct Google OAuth. Your keys are encrypted at rest. Pure security.</p>
                         </div>
                     </div>
                     <div className="flex flex-col gap-8">
@@ -558,7 +558,7 @@
                 <Features />
                 <Philosophy />
                 <div id="protocol" className="relative">
-                    <ProtocolCard step="01" title="Connect." desc="Authorize your Google account through our secure Make.com portal." index={0} />
+                    <ProtocolCard step="01" title="Connect." desc="Authorize your Google account through our secure OAuth flow." index={0} />
                     <ProtocolCard step="02" title="Index." desc="Select your invoice spreadsheet. Our system indexes your recipients." index={1} />
                     <ProtocolCard step="03" title="Automate." desc="The 42-day escalation engine takes over. Drafts are created." index={2} />
                 </div>

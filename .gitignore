@@ -67,6 +67,8 @@ env/
 .env.production
 .env.test
 .env.preview
+.env.vercel-check
+.env.vercel-check.*
 
 # Google API credentials and tokens (IMPORTANT: Never commit these!)
 client_secret.json

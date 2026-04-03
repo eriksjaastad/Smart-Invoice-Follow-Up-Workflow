@@ -81,10 +81,12 @@ scaffolding_date: 2026-01-27
 | [DECISIONS.md](DECISIONS.md) | > *Documenting WHY we made decisions, not just WHAT we built.* |
 | [Integration HTTP, Google Sheets, Tools, Gmail.blueprint.json](Integration HTTP, Google Sheets, Tools, Gmail.blueprint.json) | No description available. |
 | [MAKE_BUILDING_NOTES.md](MAKE_BUILDING_NOTES.md) | Lessons learned from building and importing SIW scenarios. Reference this before creating or debuggi... |
+| [OPENCLAW_HANDOFF.md](OPENCLAW_HANDOFF.md) | **Date:** 2026-03-25 |
 | [PRD.md](PRD.md) | **Version:** 1.1 |
 | [PRIVACY_POLICY.md](PRIVACY_POLICY.md) | **Product:** Smart Invoice Workflow |
 | [PROPOSAL_FINAL.md](PROPOSAL_FINAL.md) | **Document Version:** 1.0 |
 | [README.md](README.md) | Hosted SaaS that automates invoice follow-up for small businesses. |
+| [RESEARCH_GOOGLE_AUTH_FOR_END_USERS.md](RESEARCH_GOOGLE_AUTH_FOR_END_USERS.md) | **Date:** 2026-03-17 |
 | [REVIEWS_AND_GOVERNANCE_PROTOCOL.md](REVIEWS_AND_GOVERNANCE_PROTOCOL.md) | This file is managed by sync_governance.py and will be OVERWRITTEN on the next sync. |
 | [RUNBOOK.md](RUNBOOK.md) | This runbook is for **operating SIW safely** during MVP: diagnosing failures, preventing runaway beh... |
 | [SHIP_CHECKLIST.md](SHIP_CHECKLIST.md) | **Last Updated:** 2026-02-27 |
@@ -94,6 +96,7 @@ scaffolding_date: 2026-01-27
 | [backend/alembic/script.py.mako](backend/alembic/script.py.mako) | No description available. |
 | [backend/alembic/versions/001_initial_schema.py](backend/alembic/versions/001_initial_schema.py) | Initial schema: users and job_history tables |
 | [backend/alembic/versions/002_add_system_state.py](backend/alembic/versions/002_add_system_state.py) | Add system_state table for global kill switch |
+| [backend/alembic/versions/003_add_google_oauth_columns.py](backend/alembic/versions/003_add_google_oauth_columns.py) | Add Google OAuth columns to users table |
 | [backend/alembic.ini](backend/alembic.ini) | No description available. |
 | [backend/app/__init__.py](backend/app/__init__.py) | Smart Invoice SaaS Backend Application |
 | [backend/app/api/__init__.py](backend/app/api/__init__.py) | API routes package. |
@@ -101,6 +104,7 @@ scaffolding_date: 2026-01-27
 | [backend/app/api/billing.py](backend/app/api/billing.py) | Billing API routes for Stripe integration. |
 | [backend/app/api/cron.py](backend/app/api/cron.py) | Cron-triggered API routes. |
 | [backend/app/api/digest.py](backend/app/api/digest.py) | Digest API routes for weekly email summaries. |
+| [backend/app/api/google_oauth.py](backend/app/api/google_oauth.py) | Google OAuth flow endpoints. |
 | [backend/app/api/notifications.py](backend/app/api/notifications.py) | Notification API routes for error notifications. |
 | [backend/app/api/onboarding.py](backend/app/api/onboarding.py) | Onboarding flow API routes. |
 | [backend/app/api/system.py](backend/app/api/system.py) | System control API routes. |
@@ -125,8 +129,13 @@ scaffolding_date: 2026-01-27
 | [backend/app/schemas/user.py](backend/app/schemas/user.py) | User Pydantic schemas for request/response validation. |
 | [backend/app/schemas/webhook.py](backend/app/schemas/webhook.py) | Webhook Pydantic schemas for Make.com integration. |
 | [backend/app/services/__init__.py](backend/app/services/__init__.py) | Business logic services package. |
+| [backend/app/services/daily_processing.py](backend/app/services/daily_processing.py) | Daily invoice processing service. |
 | [backend/app/services/digest.py](backend/app/services/digest.py) | Weekly digest email service. |
+| [backend/app/services/email_templates.py](backend/app/services/email_templates.py) | Escalation email templates. |
 | [backend/app/services/escalation.py](backend/app/services/escalation.py) | Escalation logic for invoice reminders. |
+| [backend/app/services/google_gmail.py](backend/app/services/google_gmail.py) | Gmail API wrapper. |
+| [backend/app/services/google_sheets.py](backend/app/services/google_sheets.py) | Google Sheets API wrapper. |
+| [backend/app/services/google_tokens.py](backend/app/services/google_tokens.py) | Google OAuth token encryption and credential management. |
 | [backend/app/services/notifications.py](backend/app/services/notifications.py) | Error notification service. |
 | [backend/app/services/system_state.py](backend/app/services/system_state.py) | Service helpers for global system state. |
 | [case-studies/JP-Middleton.md](case-studies/JP-Middleton.md) | JP Middleton’s business, **StartGrowSell.ai** (and its operational arm **GymMembersNow**), is a stro... |
@@ -157,23 +166,6 @@ scaffolding_date: 2026-01-27
 | [static/login.html](static/login.html) | No description available. |
 | [static/onboarding.html](static/onboarding.html) | No description available. |
 | [static/settings.html](static/settings.html) | No description available. |
-| [test-results/test_user_flows-Scenario-A-fecd8-ds-and-displays-key-content/error-context.md](test-results/test_user_flows-Scenario-A-fecd8-ds-and-displays-key-content/error-context.md) | - main [ref=e3]: |
-| [test-results/test_user_flows-Scenario-A-fecd8-ds-and-displays-key-content-retry1/error-context.md](test-results/test_user_flows-Scenario-A-fecd8-ds-and-displays-key-content-retry1/error-context.md) | - main [ref=e3]: |
-| [test-results/test_user_flows-Scenario-B-5caa5-dashboard-→-onboarding-flow/error-context.md](test-results/test_user_flows-Scenario-B-5caa5-dashboard-→-onboarding-flow/error-context.md) | - main [ref=e3]: |
-| [test-results/test_user_flows-Scenario-B-5caa5-dashboard-→-onboarding-flow-retry1/error-context.md](test-results/test_user_flows-Scenario-B-5caa5-dashboard-→-onboarding-flow-retry1/error-context.md) | - main [ref=e3]: |
-| [test-results/test_user_flows-Scenario-B-c96ca--page-loads-and-shows-steps/error-context.md](test-results/test_user_flows-Scenario-B-c96ca--page-loads-and-shows-steps/error-context.md) | - main [ref=e3]: |
-| [test-results/test_user_flows-Scenario-B-c96ca--page-loads-and-shows-steps-retry1/error-context.md](test-results/test_user_flows-Scenario-B-c96ca--page-loads-and-shows-steps-retry1/error-context.md) | - main [ref=e3]: |
-| [test-results/test_user_flows-Scenario-D-59d7f-kout-creates-Stripe-session/error-context.md](test-results/test_user_flows-Scenario-D-59d7f-kout-creates-Stripe-session/error-context.md) | - main [ref=e3]: |
-| [test-results/test_user_flows-Scenario-D-59d7f-kout-creates-Stripe-session-retry1/error-context.md](test-results/test_user_flows-Scenario-D-59d7f-kout-creates-Stripe-session-retry1/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-34594-arding-step-3---Sender-info/error-context.md](test-results/test_visual_snapshots-Visu-34594-arding-step-3---Sender-info/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-34594-arding-step-3---Sender-info-retry1/error-context.md](test-results/test_visual_snapshots-Visu-34594-arding-step-3---Sender-info-retry1/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-4d185-ews-10---Dashboard-overview/error-context.md](test-results/test_visual_snapshots-Visu-4d185-ews-10---Dashboard-overview/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-6e2d6-ing-step-1---Connect-Google/error-context.md](test-results/test_visual_snapshots-Visu-6e2d6-ing-step-1---Connect-Google/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-6e2d6-ing-step-1---Connect-Google-retry1/error-context.md](test-results/test_visual_snapshots-Visu-6e2d6-ing-step-1---Connect-Google-retry1/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-98070-rding-step-2---Select-sheet/error-context.md](test-results/test_visual_snapshots-Visu-98070-rding-step-2---Select-sheet/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-98070-rding-step-2---Select-sheet-retry1/error-context.md](test-results/test_visual_snapshots-Visu-98070-rding-step-2---Select-sheet-retry1/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-a9750-oard-after-login-mock-auth-/error-context.md](test-results/test_visual_snapshots-Visu-a9750-oard-after-login-mock-auth-/error-context.md) | - main [ref=e3]: |
-| [test-results/test_visual_snapshots-Visu-a9750-oard-after-login-mock-auth--retry1/error-context.md](test-results/test_visual_snapshots-Visu-a9750-oard-after-login-mock-auth--retry1/error-context.md) | - main [ref=e3]: |
 | [uv.lock](uv.lock) | No description available. |
 | [vercel.json](vercel.json) | No description available. |
 
@@ -181,13 +173,13 @@ scaffolding_date: 2026-01-27
 
 ## Recent Activity
 
-- 2026-03-10: chore: fix broken Documents/ references after migration
-- 2026-03-10: chore: migrate Documents/ to root and .agent/rules/ (smart-invoice-workflow)
-- 2026-03-08: feat: Regenerate legal docs with Google API disclosure + expand E2E tests (#4812, #4778)
-- 2026-03-01: feat: cinematic landing page redesign + production cleanup (#4968)
-- 2026-03-01: fix: connect navbar anchor links to sections
-- 2026-03-01: feat: implement high-fidelity cinematic landing page with refined protocol graphics
-- 2026-03-01: test: add Playwright E2E tests for production smoke testing (#4778)
-- 2026-02-28: docs: update ship checklist with verified steps 1-4, 7-9
-- 2026-02-28: fix: use timezone-naive datetimes to match Neon DB schema
-- 2026-02-27: feat: kill switch, daily cron trigger, deploy config, docs cleanup (#4953, #4960, #4945, #4823, #4779)
+- 2026-03-25: test: comprehensive E2E test suite — 102 tests, auth setup, Stripe CLI automation (#5267)
+- 2026-03-23: fix: add workflow permissions for reusable workflow compatibility (#5)
+- 2026-03-23: docs: add CI review section to README (#4)
+- 2026-03-23: ci: switch to reusable review workflow from tools repo (#3)
+- 2026-03-23: ci: Add Claude auto-review workflow
+- 2026-03-22: ci: Add 'enhancement' to accepted PR type labels
+- 2026-03-22: ci: Inline PR label check (reusable workflows need paid plan)
+- 2026-03-22: ci: Add PR type label enforcement workflow
+- 2026-03-15: fix: make health check test environment-agnostic
+- 2026-03-15: fix: update hero text selector to match current landing page

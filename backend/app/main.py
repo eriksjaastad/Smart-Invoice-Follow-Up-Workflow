@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.db.session import engine, Base
+from app.db.session import Base
 
 
 @asynccontextmanager
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI application
 app = FastAPI(
     title="Smart Invoice SaaS API",
-    description="Automated invoice follow-up system with Make.com integration",
+    description="Automated invoice follow-up system with direct Google API integration",
     version="2.0.0",
     lifespan=lifespan,
     docs_url="/api/docs" if settings.debug else None,
@@ -73,6 +73,7 @@ from app.api.digest import router as digest_router
 from app.api.notifications import router as notifications_router
 from app.api.system import router as system_router
 from app.api.cron import router as cron_router
+from app.api.google_oauth import router as google_oauth_router
 
 app.include_router(auth_router)
 app.include_router(users_router)
@@ -83,6 +84,7 @@ app.include_router(digest_router)
 app.include_router(notifications_router)
 app.include_router(system_router)
 app.include_router(cron_router)
+app.include_router(google_oauth_router)
 
 # Mount static files (path relative to project root)
 static_dir = Path(__file__).parent.parent.parent / "static"

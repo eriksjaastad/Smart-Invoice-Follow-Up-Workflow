@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconnect Your Google Account</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .alert {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert h2 {
+            margin-top: 0;
+            color: #856404;
+        }
+        h1 {
+            color: #d32f2f;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .steps {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .steps ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .steps li {
+            margin: 10px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .cta-button:hover {
+            background-color: #45a049;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ Action Required: Reconnect Your Google Account</h1>
+        
+        <p>Hi {{ user_name }},</p>
+        
+        <div class="alert">
+            <h2>Your Google connection has expired</h2>
+            <p>We've detected 3 consecutive failures when trying to access Google services for <strong>{{ business_name }}</strong>.</p>
+        </div>
+        
+        <p><strong>What happened:</strong></p>
+        <p>Your Google OAuth token has expired or been revoked. This happens when:</p>
+        <ul>
+            <li>You changed your Google account password</li>
+            <li>You revoked Smart Invoice's access in your Google account settings</li>
+            <li>The OAuth token expired (typically after 6 months of inactivity)</li>
+        </ul>
+        
+        <div class="steps">
+            <h3>How to fix this (takes 2 minutes):</h3>
+            <ol>
+                <li><strong>Click the button below</strong> to visit your account settings</li>
+                <li><strong>Click "Reconnect Google Account"</strong></li>
+                <li><strong>Authorize Smart Invoice</strong> to access your Google Sheets and Gmail</li>
+                <li><strong>Done!</strong> Your invoice collection will resume automatically</li>
+            </ol>
+        </div>
+        
+        <a href="{{ frontend_url }}/settings" class="cta-button">Reconnect Google Account →</a>
+        
+        <p><strong>Why this is important:</strong> Without access to Google, we can't check your invoices or create follow-up email drafts. Your invoice collection is currently paused.</p>
+        
+        <div class="footer">
+            <p>Best regards,<br>
+            <strong>Smart Invoice Team</strong></p>
+            
+            <p style="font-size: 12px; color: #999;">
+                This is an automated error notification. Your invoice collection will resume once you reconnect your Google account.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+
