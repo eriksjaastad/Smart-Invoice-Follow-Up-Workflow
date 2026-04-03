@@ -44,6 +44,12 @@ class Settings:
     # Reminder Stages (days overdue)
     STAGES = [7, 14, 21, 28, 35, 42]
 
+    # Draft Safety Limits
+    MAX_DRAFTS_PER_RUN: int = int(os.getenv("MAX_DRAFTS_PER_RUN", "50"))
+    DRAFT_LEDGER_PATH: Path = Path(
+        os.getenv("DRAFT_LEDGER_PATH", "")
+    ) if os.getenv("DRAFT_LEDGER_PATH") else (LOGS_DIR / "draft_ledger.jsonl")
+
     # API Retry Configuration
     MAX_RETRIES: int = int(os.getenv("MAX_API_RETRIES", "4"))
     RETRY_INITIAL_WAIT: int = int(os.getenv("RETRY_INITIAL_WAIT_SECONDS", "1"))

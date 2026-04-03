@@ -1,5 +1,6 @@
 """Application configuration using Pydantic Settings"""
 from pathlib import Path
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
@@ -32,7 +33,7 @@ class Settings(BaseSettings):
     debug_mock_auth: bool = False  # Set to True to bypass Auth0 login locally
     
     # Database
-    database_url: str
+    database_url: str = ""
     
     # Auth0
     auth0_domain: str = ""
@@ -41,7 +42,15 @@ class Settings(BaseSettings):
     auth0_audience: str = ""
     auth0_callback_url: str = ""
     jwt_secret: str = ""
-    secret_key: str = "your-secret-key-change-in-production"  # Added for SessionMiddleware
+    secret_key: str = "your-secret-key-change-in-production"
+
+    @field_validator("jwt_secret", "secret_key", mode="before")
+    @classmethod
+    def strip_secret_whitespace(cls, v: str) -> str:
+        """Strip trailing literal \\n and whitespace from secrets."""
+        if isinstance(v, str):
+            return v.replace("\\n", "").strip()
+        return v
 
     # Stripe
     stripe_secret_key: str = ""
@@ -49,12 +58,12 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_price_id: str = ""
 
-    # Make.com Webhook URLs
-    make_daily_processing_webhook_url: str = ""
-    make_list_sheets_webhook_url: str = ""
-    make_validate_sheet_webhook_url: str = ""
-    make_create_template_webhook_url: str = ""
-    x_make_api_key: str = ""
+    # Google OAuth (direct API — replaces Make.com)
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = ""
+    google_token_encryption_key: str = ""  # Fernet key for encrypting refresh tokens
+    google_api_key: str = ""  # API key for Google Picker JS (browser-side)
 
     # Resend
     resend_api_key: str = ""

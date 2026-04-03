@@ -18,13 +18,19 @@ from .config import settings
 from .models import Invoice, DraftCreated
 from .sheets import read_invoices, write_back_invoices
 from .router import days_overdue, stage_for, should_send
-from .emailer import create_draft_from_template, template_path_for, render_template
+from .emailer import (
+    create_draft_from_template,
+    template_path_for,
+    render_template,
+    has_email_been_contacted_today,
+)
 
 
 class ErrorType(Enum):
     """Types of errors that can occur during processing"""
     SKIP_INVALID_DATA = "skip_invalid_data"
     DRAFT_FAILED = "draft_failed"
+    DRAFT_LIMIT_REACHED = "draft_limit_reached"
     WRITE_BACK_FAILED = "write_back_failed"
     READ_FAILED = "read_failed"
 
@@ -64,6 +70,7 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
         Tuple of (drafts_created, errors_encountered)
     """
     today = date.today()
+    today_key = today.strftime("%Y-%m-%d")
     logger.info(f"Starting daily invoice collection run for {today}")
 
     # Validate configuration
@@ -114,6 +121,27 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
                     f"last_stage={invoice.last_stage_sent}, last_sent={invoice.last_sent_at}"
                 )
                 continue
+            if has_email_been_contacted_today(invoice.client_email, today_key):
+                logger.warning(
+                    f"Skipping {invoice.invoice_id}: email already drafted today "
+                    f"(email={invoice.client_email}, date={today_key})"
+                )
+                continue
+            if len(drafts_created) >= settings.MAX_DRAFTS_PER_RUN:
+                error_msg = (
+                    f"Draft limit reached ({settings.MAX_DRAFTS_PER_RUN}). "
+                    f"Halting further draft creation."
+                )
+                logger.error(error_msg)
+                errors.append(
+                    ProcessingError(
+                        invoice_id=invoice.invoice_id,
+                        client_name=invoice.client_name,
+                        error_message=error_msg,
+                        error_type=ErrorType.DRAFT_LIMIT_REACHED,
+                    )
+                )
+                break
 
             # Build context for template
             context = {
@@ -151,7 +179,7 @@ def run_daily() -> tuple[List[DraftCreated], List[ProcessingError]]:
 
                 # Track for write-back
                 updates_to_write.append(
-                    (invoice.invoice_id, stage, today.strftime("%Y-%m-%d"))
+                    (invoice.invoice_id, stage, today_key)
                 )
 
             # Track what we created

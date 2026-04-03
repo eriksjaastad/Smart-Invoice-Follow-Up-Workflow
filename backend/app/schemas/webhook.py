@@ -1,5 +1,5 @@
 """
-Webhook Pydantic schemas for Make.com integration.
+Webhook Pydantic schemas for job result ingestion.
 """
 from typing import Any, Optional
 from uuid import UUID
@@ -10,10 +10,10 @@ from pydantic import BaseModel, Field
 
 class MakeWebhookRequest(BaseModel):
     """
-    Schema for Make.com webhook requests.
-    This is the payload Make.com sends to POST /api/webhooks/make-results
+    Schema for job result webhook requests.
+    Payload sent to POST /api/webhooks/job-results after invoice processing.
     """
-    user_id: UUID = Field(..., description="User ID from Make.com build variable")
+    user_id: UUID = Field(..., description="User ID")
     invoices_checked: int = Field(..., ge=0, description="Number of invoices checked")
     drafts_created: int = Field(..., ge=0, description="Number of Gmail drafts created")
     total_outstanding_amount: Optional[Decimal] = Field(None, ge=0, description="Total outstanding amount")

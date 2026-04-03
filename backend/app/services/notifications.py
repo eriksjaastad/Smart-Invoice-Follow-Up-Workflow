@@ -89,9 +89,12 @@ def classify_error(error_data: dict) -> str:
     if any(keyword in error_str for keyword in ['permission', 'access denied', 'forbidden', '403', 'sheet']):
         return 'sheet_access'
     
-    # Check for Make.com connection errors
-    if any(keyword in error_str for keyword in ['oauth', 'token', 'expired', 'unauthorized', '401', 'make.com']):
-        return 'make_connection'
+    # Check for Google OAuth/token errors
+    if any(keyword in error_str for keyword in [
+        'oauth', 'token', 'expired', 'unauthorized', '401',
+        'invalid_grant', 'auth_revoked', 'revoked',
+    ]):
+        return 'google_connection'
     
     return 'generic'
 
@@ -136,8 +139,8 @@ async def send_error_notification(user: User, failure_info: dict) -> bool:
         # Create subject based on error type
         subject_map = {
             'sheet_access': f"Action Required: Google Sheets Access Lost - {user.business_name}",
-            'make_connection': f"Action Required: Reconnect Your Google Account - {user.business_name}",
-            'generic': f"Action Required: Invoice Collection Errors - {user.business_name}"
+            'google_connection': f"Action Required: Reconnect Your Google Account - {user.business_name}",
+            'generic': f"Action Required: Invoice Collection Errors - {user.business_name}",
         }
         subject = subject_map.get(error_type, subject_map['generic'])
 

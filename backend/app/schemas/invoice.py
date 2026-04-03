@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, field_validator
 class Invoice(BaseModel):
     """
     Schema for validating invoice data from Google Sheets.
-    Used by Make.com scenarios to validate sheet data before processing.
+    Used by daily processing to validate sheet data before creating drafts.
     """
     invoice_number: str = Field(..., min_length=1, max_length=100, description="Invoice number")
     client_name: str = Field(..., min_length=1, max_length=255, description="Client name")
@@ -25,7 +25,7 @@ class Invoice(BaseModel):
     @field_validator('client_email')
     @classmethod
     def validate_email_format(cls, v: str) -> str:
-        """Basic email validation (Make.com will do more thorough validation)."""
+        """Basic email format validation."""
         if '@' not in v or '.' not in v.split('@')[-1]:
             raise ValueError('Invalid email format')
         return v.lower().strip()
