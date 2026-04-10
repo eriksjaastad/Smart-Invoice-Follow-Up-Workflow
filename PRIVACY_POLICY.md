@@ -5,7 +5,7 @@ tags:
   - domain/legal
 status: "#status/ready-for-review"
 created: 2026-02-28
-updated: 2026-03-08
+updated: 2026-04-10
 ---
 
 # Privacy Policy
@@ -13,7 +13,7 @@ updated: 2026-03-08
 **Product:** Smart Invoice Workflow  
 **Company:** Synth Insight Labs  
 **Website:** https://smartinvoiceworkflow.com  
-**Effective Date:** March 8, 2026  
+**Effective Date:** April 10, 2026  
 **Contact:** admin@synthinsightlabs.com
 
 ---
@@ -33,6 +33,7 @@ We collect only what is necessary to run the Service:
 - **Job history and run metadata:** Timestamps of when your daily invoice processing job ran, counts of emails drafted, and error logs for debugging.
 - **Payment data:** Billing is handled entirely by Stripe. We store your Stripe customer ID and subscription ID for billing management. We do not store card numbers or payment details.
 - **Usage data:** Standard server logs (request timestamps, IP addresses, error traces) for security and reliability.
+- **Analytics data:** Aggregate pageview, session, and event data collected via Google Analytics and Google Ads conversion tracking (see Section 9 for details).
 
 We do **not** store your Google OAuth tokens, Gmail messages, or the contents of invoices processed on your behalf.
 
@@ -48,6 +49,7 @@ We use your data to:
 - Process billing and subscription management via Stripe
 - Send operational emails (weekly digest summaries of job results, billing receipts)
 - Monitor service reliability and diagnose errors
+- Measure website performance and advertising effectiveness in aggregate
 
 ---
 
@@ -58,7 +60,7 @@ We use the following third-party services to operate the Service. Each has its o
 | Processor | Purpose | Privacy Policy |
 |-----------|---------|----------------|
 | Make.com | Automation (connects Google Sheets & Gmail OAuth flow) | https://www.make.com/en/privacy-notice |
-| Google | Google Sheets API, Gmail API | https://policies.google.com/privacy |
+| Google | Google Sheets API, Gmail API, Google Analytics, Google Ads conversion tracking | https://policies.google.com/privacy |
 | Auth0 | User authentication | https://www.okta.com/privacy-policy/ |
 | Stripe | Payment processing | https://stripe.com/privacy |
 | Resend | Transactional email delivery | https://resend.com/legal/privacy-policy |
@@ -96,10 +98,11 @@ You can:
 - **Disconnect Google** at any time from your [Google Account permissions](https://myaccount.google.com/permissions).
 - **Request access, correction, or deletion** of your account data by emailing us.
 - **Cancel your subscription** at any time; your data is retained for 90 days after cancellation.
+- **Opt out of analytics** by installing the [Google Analytics Opt-out Browser Add-on](https://tools.google.com/dlpage/gaoptout) or by enabling Do Not Track in your browser.
 
 **EU/EEA Users (GDPR):** If you are located in the European Economic Area, you have additional rights under the General Data Protection Regulation (GDPR):
 
-- **Legal basis:** We process your data on the basis of contract performance (to provide the Service you signed up for) and legitimate interests (security, fraud prevention).
+- **Legal basis:** We process your data on the basis of contract performance (to provide the Service you signed up for) and legitimate interests (security, fraud prevention, website analytics).
 - **Data Subject Rights:** Right of access, rectification, erasure, restriction, data portability, and objection. You also have the right to lodge a complaint with your local supervisory authority.
 - **Data Transfers:** Your data may be processed in the United States. Where required, we rely on Standard Contractual Clauses or other approved transfer mechanisms.
 
@@ -113,9 +116,17 @@ We implement reasonable administrative and technical safeguards, including encry
 
 ---
 
-## 9. Cookies
+## 9. Cookies and Analytics
 
-We use session cookies necessary for authentication (set by Auth0). We do not use third-party tracking or advertising cookies.
+We use the following cookies and tracking technologies:
+
+- **Essential cookies:** Session cookies necessary for authentication (set by Auth0).
+- **Google Analytics:** We use Google Analytics 4 to measure aggregate pageviews, sessions, and on-site events. Google Analytics may set first-party cookies (`_ga`, `_ga_*`) to distinguish unique visitors. Data is used to understand how visitors find and use our site. See [Google's Privacy Policy](https://policies.google.com/privacy).
+- **Google Ads conversion tracking:** We use Google Ads conversion tracking to measure whether visitors who clicked our ads completed key actions (such as signing up). This allows us to evaluate advertising effectiveness.
+
+You can opt out of Google Analytics tracking by installing the [Google Analytics Opt-out Browser Add-on](https://tools.google.com/dlpage/gaoptout). Most browsers also let you block or clear third-party cookies from their settings.
+
+We do not use retargeting, cross-site tracking, or third-party advertising networks beyond Google Ads conversion measurement.
 
 ---
 

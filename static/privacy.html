@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy | Smart Invoice Workflow</title>
+
+    <!-- Google tag (gtag.js) — placeholder ID, swap in real Google Ads / Analytics ID before launch -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600;1,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Tailwind (Play CDN for prototyping) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E4036',
+                        accent: '#CC5833',
+                        background: '#F2F0E9',
+                        charcoal: '#1A1A1A',
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                        drama: ['"Cormorant Garamond"', 'serif'],
+                        mono: ['"IBM Plex Mono"', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-background text-charcoal font-sans selection:bg-accent/20;
+            }
+        }
+        @layer components {
+            .noise-overlay {
+                position: fixed;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                pointer-events: none;
+                z-index: 9999;
+                opacity: 0.05;
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            }
+            .legal-prose h2 {
+                @apply font-heading font-extrabold text-2xl md:text-3xl mt-12 mb-4 text-charcoal;
+            }
+            .legal-prose p {
+                @apply font-sans text-base text-charcoal/80 leading-relaxed mb-4;
+            }
+            .legal-prose ul {
+                @apply list-disc pl-6 space-y-2 text-charcoal/80 mb-4;
+            }
+            .legal-prose a {
+                @apply text-accent underline hover:text-primary transition;
+            }
+            .legal-prose table {
+                @apply w-full border-collapse my-4 text-sm;
+            }
+            .legal-prose th, .legal-prose td {
+                @apply border border-charcoal/20 px-3 py-2 text-left;
+            }
+            .legal-prose th {
+                @apply bg-charcoal/5 font-heading font-bold;
+            }
+            .legal-prose hr {
+                @apply my-8 border-charcoal/10;
+            }
+            .legal-prose strong {
+                @apply font-bold text-charcoal;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+
+    <header class="w-full py-6 px-8 border-b border-charcoal/10">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">⚡</div>
+                <span class="font-heading font-extrabold tracking-tighter text-xl">SMART <span class="font-drama italic font-medium">INVOICE</span></span>
+            </a>
+            <a href="/" class="text-sm font-heading text-charcoal/60 hover:text-charcoal">← Back to home</a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-8 py-16 legal-prose">
+        <h1 class="font-heading font-extrabold text-4xl md:text-5xl mb-4">Privacy Policy</h1>
+        <div class="text-sm font-mono text-charcoal/60 mb-12 space-y-1">
+            <p><strong>Product:</strong> Smart Invoice Workflow</p>
+            <p><strong>Company:</strong> Synth Insight Labs</p>
+            <p><strong>Website:</strong> <a href="https://smartinvoiceworkflow.com">https://smartinvoiceworkflow.com</a></p>
+            <p><strong>Effective Date:</strong> April 10, 2026</p>
+            <p><strong>Contact:</strong> <a href="mailto:admin@synthinsightlabs.com">admin@synthinsightlabs.com</a></p>
+        </div>
+
+        <hr>
+
+        <h2>1. Summary</h2>
+        <p>Smart Invoice Workflow ("we," "us," or "our") helps freelancers and small businesses automate invoice follow-up using their existing Google Sheet and Gmail. We collect and use data to provide this service. We do not sell your personal information.</p>
+
+        <hr>
+
+        <h2>2. Information We Collect</h2>
+        <p>We collect only what is necessary to run the Service:</p>
+        <ul>
+            <li><strong>Account data:</strong> Your name, email address, and business name (provided during onboarding); your Auth0 user identifier.</li>
+            <li><strong>Google Sheet identifier:</strong> The Sheet ID you connect. We store only this identifier — we do not store the contents of your spreadsheet. Invoice data (client names, emails, amounts, due dates) lives in your Google Sheet, not our database.</li>
+            <li><strong>Job history and run metadata:</strong> Timestamps of when your daily invoice processing job ran, counts of emails drafted, and error logs for debugging.</li>
+            <li><strong>Payment data:</strong> Billing is handled entirely by Stripe. We store your Stripe customer ID and subscription ID for billing management. We do not store card numbers or payment details.</li>
+            <li><strong>Usage data:</strong> Standard server logs (request timestamps, IP addresses, error traces) for security and reliability.</li>
+            <li><strong>Analytics data:</strong> Aggregate pageview, session, and event data collected via Google Analytics and Google Ads conversion tracking (see Section 9 for details).</li>
+        </ul>
+        <p>We do <strong>not</strong> store your Google OAuth tokens, Gmail messages, or the contents of invoices processed on your behalf.</p>
+
+        <hr>
+
+        <h2>3. How We Use Information</h2>
+        <p>We use your data to:</p>
+        <ul>
+            <li>Authenticate you and maintain your account</li>
+            <li>Connect to your Google Sheet (via Make.com) to identify invoices due for follow-up</li>
+            <li>Create Gmail draft emails in your inbox on your behalf</li>
+            <li>Process billing and subscription management via Stripe</li>
+            <li>Send operational emails (weekly digest summaries of job results, billing receipts)</li>
+            <li>Monitor service reliability and diagnose errors</li>
+            <li>Measure website performance and advertising effectiveness in aggregate</li>
+        </ul>
+
+        <hr>
+
+        <h2>4. Service Processors</h2>
+        <p>We use the following third-party services to operate the Service. Each has its own privacy policy governing its use of data:</p>
+        <table>
+            <thead>
+                <tr><th>Processor</th><th>Purpose</th><th>Privacy Policy</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Make.com</td><td>Automation (connects Google Sheets & Gmail OAuth flow)</td><td><a href="https://www.make.com/en/privacy-notice">Link</a></td></tr>
+                <tr><td>Google</td><td>Google Sheets API, Gmail API, Google Analytics, Google Ads conversion tracking</td><td><a href="https://policies.google.com/privacy">Link</a></td></tr>
+                <tr><td>Auth0</td><td>User authentication</td><td><a href="https://www.okta.com/privacy-policy/">Link</a></td></tr>
+                <tr><td>Stripe</td><td>Payment processing</td><td><a href="https://stripe.com/privacy">Link</a></td></tr>
+                <tr><td>Resend</td><td>Transactional email delivery</td><td><a href="https://resend.com/legal/privacy-policy">Link</a></td></tr>
+                <tr><td>Vercel</td><td>Application hosting</td><td><a href="https://vercel.com/legal/privacy-policy">Link</a></td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>5. Google API Limited Use Disclosure</h2>
+        <p>Smart Invoice Workflow's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+        <p>Specifically:</p>
+        <ul>
+            <li>We request access to your Google Sheets data solely to read invoice statuses from the sheet you select, and to your Gmail to create draft emails — no other purpose.</li>
+            <li>We do not use your Google user data to serve advertising.</li>
+            <li>We do not allow humans to read your Google user data, except when required by law, for security investigation, or with your explicit permission.</li>
+            <li>We do not transfer your Google user data to third parties, except as necessary to provide the Service (to Make.com, which processes the OAuth connection on our behalf) or as required by law.</li>
+        </ul>
+        <p>You can revoke Google access at any time from your <a href="https://myaccount.google.com/permissions">Google Account security page</a>.</p>
+
+        <hr>
+
+        <h2>6. Data Retention</h2>
+        <p>We retain your account data while your account is active. If you cancel, we may retain data for up to 90 days to allow account recovery, after which it is deleted. You may request earlier deletion by contacting us.</p>
+        <p>Job history logs are retained for 12 months.</p>
+
+        <hr>
+
+        <h2>7. Your Choices and Rights</h2>
+        <p>You can:</p>
+        <ul>
+            <li><strong>Update your account information</strong> in your dashboard settings.</li>
+            <li><strong>Disconnect Google</strong> at any time from your <a href="https://myaccount.google.com/permissions">Google Account permissions</a>.</li>
+            <li><strong>Request access, correction, or deletion</strong> of your account data by emailing us.</li>
+            <li><strong>Cancel your subscription</strong> at any time; your data is retained for 90 days after cancellation.</li>
+            <li><strong>Opt out of analytics</strong> by installing the <a href="https://tools.google.com/dlpage/gaoptout">Google Analytics Opt-out Browser Add-on</a> or by enabling Do Not Track in your browser.</li>
+        </ul>
+        <p><strong>EU/EEA Users (GDPR):</strong> If you are located in the European Economic Area, you have additional rights under the General Data Protection Regulation (GDPR):</p>
+        <ul>
+            <li><strong>Legal basis:</strong> We process your data on the basis of contract performance (to provide the Service you signed up for) and legitimate interests (security, fraud prevention, website analytics).</li>
+            <li><strong>Data Subject Rights:</strong> Right of access, rectification, erasure, restriction, data portability, and objection. You also have the right to lodge a complaint with your local supervisory authority.</li>
+            <li><strong>Data Transfers:</strong> Your data may be processed in the United States. Where required, we rely on Standard Contractual Clauses or other approved transfer mechanisms.</li>
+        </ul>
+        <p>To exercise your GDPR rights or appoint a representative, contact us at <a href="mailto:admin@synthinsightlabs.com">admin@synthinsightlabs.com</a>.</p>
+
+        <hr>
+
+        <h2>8. Security</h2>
+        <p>We implement reasonable administrative and technical safeguards, including encrypted connections (HTTPS), access controls, and secure credential storage via Doppler. No internet transmission is 100% secure. We will notify you of a data breach as required by applicable law.</p>
+
+        <hr>
+
+        <h2>9. Cookies and Analytics</h2>
+        <p>We use the following cookies and tracking technologies:</p>
+        <ul>
+            <li><strong>Essential cookies:</strong> Session cookies necessary for authentication (set by Auth0).</li>
+            <li><strong>Google Analytics:</strong> We use Google Analytics 4 to measure aggregate pageviews, sessions, and on-site events. Google Analytics may set first-party cookies (<code>_ga</code>, <code>_ga_*</code>) to distinguish unique visitors. Data is used to understand how visitors find and use our site. See <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>.</li>
+            <li><strong>Google Ads conversion tracking:</strong> We use Google Ads conversion tracking to measure whether visitors who clicked our ads completed key actions (such as signing up). This allows us to evaluate advertising effectiveness.</li>
+        </ul>
+        <p>You can opt out of Google Analytics tracking by installing the <a href="https://tools.google.com/dlpage/gaoptout">Google Analytics Opt-out Browser Add-on</a>. Most browsers also let you block or clear third-party cookies from their settings.</p>
+        <p>We do not use retargeting, cross-site tracking, or third-party advertising networks beyond Google Ads conversion measurement.</p>
+
+        <hr>
+
+        <h2>10. Children's Privacy</h2>
+        <p>The Service is not directed to children under 13. We do not knowingly collect data from children under 13. If we learn we have collected such data, we will delete it.</p>
+
+        <hr>
+
+        <h2>11. Changes to This Policy</h2>
+        <p>We may update this Policy. We will revise the "Updated" date at the top and, for material changes, provide notice via email or the dashboard. Continued use of the Service after changes constitutes acceptance.</p>
+
+        <hr>
+
+        <h2>12. Contact</h2>
+        <p>Privacy questions or data requests: <strong><a href="mailto:admin@synthinsightlabs.com">admin@synthinsightlabs.com</a></strong></p>
+    </main>
+
+    <footer class="py-12 px-8 bg-charcoal border-t border-white/5 mt-16">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white font-bold">⚡</div>
+                    <span class="font-heading font-extrabold tracking-tighter text-xl text-white">SMART <span class="font-drama italic font-medium">INVOICE</span></span>
+                </div>
+                <p class="text-white/40 font-heading max-w-xs text-sm">The autonomous standard for modern invoice management. Built by Synth Insight Labs.</p>
+            </div>
+            <div class="flex gap-8 text-white/40 font-heading text-sm">
+                <a href="/terms" class="hover:text-white">Terms</a>
+                <a href="/privacy" class="hover:text-white">Privacy</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
