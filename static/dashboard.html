@@ -4,14 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18081954084"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-18081954084');
-    </script>
+    <script src="/js/google-ads.js"></script>
     <title>Dashboard | Smart Invoice</title>
     
     <!-- Tailwind CSS -->
@@ -199,6 +192,7 @@
                         const response = await fetch('/api/auth/me', { credentials: 'include' });
                         if (response.ok) {
                             this.user = await response.json();
+                            await this.handleCheckoutReturn();
                         } else {
                             window.location.href = '/login.html';
                         }
@@ -207,6 +201,56 @@
                         window.location.href = '/login.html';
                     } finally {
                         this.loading = false;
+                    }
+                },
+
+                async handleCheckoutReturn() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('checkout') !== 'success') {
+                        return;
+                    }
+
+                    const sessionId = params.get('session_id');
+                    if (!sessionId) {
+                        window.history.replaceState({}, '', '/dashboard.html');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/billing/checkout-session/${encodeURIComponent(sessionId)}`, {
+                            credentials: 'include'
+                        });
+
+                        if (!response.ok) {
+                            return;
+                        }
+
+                        const checkout = await response.json();
+                        if (!checkout.verified) {
+                            return;
+                        }
+
+                        const value = typeof checkout.amount_total === 'number'
+                            ? checkout.amount_total / 100
+                            : 15.0;
+                        const currency = (checkout.currency || 'USD').toUpperCase();
+
+                        window.SmartInvoiceAds?.trackOnce(`purchase-${sessionId}`, () => {
+                            window.SmartInvoiceAds.trackConversion('purchase', {
+                                transaction_id: sessionId,
+                                value,
+                                currency
+                            });
+                        });
+                        window.SmartInvoiceAds?.trackEvent('purchase_verified', {
+                            transaction_id: sessionId,
+                            value,
+                            currency
+                        });
+                    } catch (error) {
+                        console.error('Failed to verify Stripe checkout session', error);
+                    } finally {
+                        window.history.replaceState({}, '', '/dashboard.html');
                     }
                 },
 
