@@ -47,6 +47,16 @@ class BillingStatusResponse(BaseModel):
     customer_portal_url: Optional[str] = Field(None, description="URL to Stripe customer portal")
 
 
+class CheckoutSessionStatusResponse(BaseModel):
+    """Verification payload for a Stripe Checkout return."""
+    session_id: str
+    verified: bool
+    status: Optional[str] = None
+    payment_status: Optional[str] = None
+    amount_total: Optional[int] = None
+    currency: Optional[str] = None
+
+
 # Billing endpoints
 
 @router.post("/create-checkout", response_model=CreateCheckoutResponse)
@@ -135,6 +145,42 @@ async def create_customer_portal_session(
         return {"portal_url": portal_session.url}
     except stripe.error.StripeError as e:
         raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
+
+
+@router.get("/checkout-session/{session_id}", response_model=CheckoutSessionStatusResponse)
+async def get_checkout_session_status(
+    session_id: str,
+    current_user: User = Depends(require_auth)
+):
+    """
+    Verify that a returned Stripe Checkout session belongs to the current user.
+
+    This is used by the dashboard to fire purchase tracking only after a real,
+    completed Stripe return instead of relying on a public success URL alone.
+    """
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
+
+    metadata_user_id = session.get("metadata", {}).get("user_id")
+    if metadata_user_id != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Checkout session does not belong to current user")
+
+    verified = (
+        session.get("status") == "complete"
+        and bool(session.get("subscription"))
+        and current_user.plan == "paid"
+    )
+
+    return CheckoutSessionStatusResponse(
+        session_id=session["id"],
+        verified=verified,
+        status=session.get("status"),
+        payment_status=session.get("payment_status"),
+        amount_total=session.get("amount_total"),
+        currency=session.get("currency"),
+    )
 
 
 @router.post("/webhook")
@@ -309,4 +355,3 @@ async def get_billing_status(
         stripe_subscription_id=current_user.stripe_subscription_id,
         customer_portal_url=customer_portal_url
     )
-
