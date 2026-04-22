@@ -5,23 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Invoice | Stop Chasing Invoices</title>
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18081954084"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-18081954084');
-    </script>
-
-    <!-- Event snippet for Page view conversion page -->
-    <script>
-      gtag('event', 'conversion', {
-          'send_to': 'AW-18081954084/gJ-bCK_ukZscEKTykq5D',
-          'value': 1.0,
-          'currency': 'USD'
-      });
-    </script>
+    <script src="/js/google-ads.js"></script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -150,7 +134,10 @@
                         <a href="#pricing" className="hover:text-accent transition-colors">Pricing</a>
                     </div>
 
-                    <a href="/login.html" className={`px-6 py-2 rounded-full font-heading text-sm font-bold btn-magnetic group relative ${
+                    <a
+                        href="/login.html"
+                        data-ads-event="landing_cta_click_nav"
+                        className={`px-6 py-2 rounded-full font-heading text-sm font-bold btn-magnetic group relative ${
                         isScrolled ? 'bg-charcoal text-white' : 'bg-white text-charcoal'
                     }`}>
                         <span className="bg-accent"></span>
@@ -214,7 +201,7 @@
                             </p>
                             
                             <div className="hero-stagger mt-10">
-                                <a href="/login.html" className="px-10 py-5 rounded-full bg-accent text-white font-heading font-extrabold text-lg btn-magnetic group inline-flex items-center gap-3">
+                                <a href="/login.html" data-ads-event="landing_cta_click_hero" className="px-10 py-5 rounded-full bg-accent text-white font-heading font-extrabold text-lg btn-magnetic group inline-flex items-center gap-3">
                                     <span className="bg-white/20"></span>
                                     <div className="relative z-10 flex items-center gap-3">
                                         Deploy Protocol <Icon name="arrow-right" size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -517,7 +504,7 @@
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> 3 Invoices / day</li>
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> 42-day cycle</li>
                             </ul>
-                            <a href="/login.html" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Select</a>
+                            <a href="/login.html" data-ads-event="landing_cta_click_pricing_free" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Select</a>
                         </div>
                         <div className="p-10 rounded-4xl bg-accent flex flex-col gap-8 transform md:scale-105 shadow-2xl">
                             <span className="font-mono text-white/60 uppercase text-xs tracking-widest">Performance</span>
@@ -526,7 +513,7 @@
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} /> 100 Invoices / day</li>
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} /> Priority queue</li>
                             </ul>
-                            <a href="/login.html" className="mt-auto py-4 rounded-full bg-white text-accent text-center font-bold">Go Performance</a>
+                            <a href="/login.html" data-ads-event="landing_cta_click_pricing_paid" className="mt-auto py-4 rounded-full bg-white text-accent text-center font-bold">Go Performance</a>
                         </div>
                         <div className="p-10 rounded-4xl bg-white/5 border border-white/10 flex flex-col gap-8">
                             <span className="font-mono text-white/40 uppercase text-xs tracking-widest">Enterprise</span>
@@ -600,5 +587,12 @@
             50% { transform: scaleX(1); transform-origin: left; }
         }
     </style>
+    <script>
+        document.querySelectorAll('[data-ads-event]').forEach((element) => {
+            element.addEventListener('click', () => {
+                window.SmartInvoiceAds?.trackEvent(element.dataset.adsEvent);
+            });
+        });
+    </script>
 </body>
 </html>

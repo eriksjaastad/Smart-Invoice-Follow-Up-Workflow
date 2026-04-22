@@ -4,14 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18081954084"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-18081954084');
-    </script>
+    <script src="/js/google-ads.js"></script>
     <title>Billing & Plan | Smart Invoice</title>
     
     <!-- Tailwind CSS -->
@@ -161,18 +154,28 @@
                 async upgradeToPro() {
                     this.isProcessing = true;
                     try {
+                        window.SmartInvoiceAds?.trackOnce('checkout-start-click', () => {
+                            window.SmartInvoiceAds.trackConversion('checkoutStart', {
+                                value: 15.0,
+                                currency: 'USD'
+                            });
+                        });
                         const response = await fetch('/api/billing/create-checkout', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'include',
                             body: JSON.stringify({
-                                success_url: `${window.location.origin}/dashboard.html`,
-                                cancel_url: `${window.location.origin}/billing.html`
+                                success_url: `${window.location.origin}/dashboard.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+                                cancel_url: `${window.location.origin}/billing.html?checkout=cancelled`
                             })
                         });
                         
                         if (response.ok) {
                             const data = await response.json();
+                            window.SmartInvoiceAds?.trackEvent('stripe_checkout_redirect', {
+                                value: 15.0,
+                                currency: 'USD'
+                            });
                             window.location.href = data.checkout_url;
                         } else {
                             alert('Stripe integration is not fully configured locally.');
@@ -210,6 +213,12 @@
                     window.location.href = '/api/auth/logout';
                 }
             }
+        }
+
+        const billingParams = new URLSearchParams(window.location.search);
+        if (billingParams.get('checkout') === 'cancelled') {
+            window.SmartInvoiceAds?.trackEvent('checkout_cancelled');
+            window.history.replaceState({}, '', '/billing.html');
         }
     </script>
 </body>
