@@ -4,14 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18081954084"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-18081954084');
-    </script>
+    <script src="/js/google-ads.js"></script>
     <title>Secure Login | Smart Invoice</title>
     
     <!-- Tailwind CSS -->
@@ -26,6 +19,7 @@
         // Automatically redirect to Auth0 login after a brief moment for the UI to render
         window.onload = function() {
             setTimeout(() => {
+                window.SmartInvoiceAds?.trackEvent('auth_redirect_started');
                 window.location.href = '/api/auth/login';
             }, 800);
         };

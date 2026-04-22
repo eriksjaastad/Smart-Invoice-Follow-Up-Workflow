@@ -4,14 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18081954084"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-18081954084');
-    </script>
+    <script src="/js/google-ads.js"></script>
     <title>Setup | Smart Invoice</title>
 
     <!-- Tailwind CSS -->
@@ -274,6 +267,9 @@
 
                     if (googleStatus === 'connected') {
                         this.googleConnected = true;
+                        window.SmartInvoiceAds?.trackOnce('google-connected', () => {
+                            window.SmartInvoiceAds.trackEvent('google_connected');
+                        });
                         if (step === '2') {
                             this.currentStep = 2;
                         }
@@ -313,6 +309,7 @@
                 async connectGoogle() {
                     this.isProcessing = true;
                     this.googleError = '';
+                    window.SmartInvoiceAds?.trackEvent('google_connect_started');
                     try {
                         const response = await fetch('/api/auth/google/connect', { credentials: 'include' });
                         if (response.ok) {
@@ -414,6 +411,7 @@
                         });
 
                         if (response.ok) {
+                            window.SmartInvoiceAds?.trackEvent('sheet_selected');
                             this.currentStep = 3;
                         } else {
                             const err = await response.json();
@@ -441,6 +439,13 @@
                         });
 
                         if (response.ok) {
+                            window.SmartInvoiceAds?.trackOnce('lead-onboarding-complete', () => {
+                                window.SmartInvoiceAds.trackConversion('lead', {
+                                    value: 1.0,
+                                    currency: 'USD'
+                                });
+                            });
+                            window.SmartInvoiceAds?.trackEvent('onboarding_complete');
                             this.completed = true;
                         } else {
                             const err = await response.json();
