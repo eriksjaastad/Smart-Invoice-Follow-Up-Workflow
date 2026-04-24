@@ -254,3 +254,51 @@ On 2026-01-27, an AI agent ran a migration that dropped the tasks table without 
 
 <!-- Source: .agentsync/rules/*.md -->
 <!-- AGENTSYNC:END - Custom rules below this line are preserved -->
+
+# Identity & Writes
+
+**In this repo you are `smart-invoice-workflow-manager[bot]`.** Every commit, push, PR, and issue you make in `~/projects/auxesis-projects/smart-invoice-workflow/` authors as this bot — never as a human, never as the caretaker or project-manager bot. SIW predates the shared project-manager convention and has its own dedicated bot.
+
+Verify the repo-local git identity before committing:
+
+```bash
+git config --local user.name    # must print: smart-invoice-workflow-manager[bot]
+git config --local user.email   # must print: <app-id>+smart-invoice-workflow-manager[bot]@users.noreply.github.com
+```
+
+If either prints anything else (e.g. `CodexSpud` or your personal account), stop and run the one-time setup:
+
+```bash
+~/projects/auxesis/scripts/set-repo-bot-identity.sh smart-invoice-workflow
+```
+
+**For GitHub API writes (PRs, issues, labels, releases) use the SIW wrapper:**
+
+```bash
+~/projects/auxesis/scripts/gha-siw.sh pr create --title "..." --label enhancement --body "..."
+~/projects/auxesis/scripts/gha-siw.sh issue create --title "..." --body "..."
+```
+
+`git push` works as the SIW bot via the credential helper configured by the setup script.
+
+Never use bare `gh` for writes — the PreToolUse hook will reject it. Never use `gha` or `gha-pm.sh` in this repo — those authenticate as the wrong bot and the GitHub App lacks install permission here.
+
+Full detail: `~/projects/auxesis/docs/bot-identities.md`.
+
+# Vercel
+
+This project deploys on Vercel. Before searching manually or guessing at CLI flags, invoke the appropriate skill — they contain current, accurate Vercel knowledge.
+
+| Task | Skill to invoke |
+|---|---|
+| Check deployment status / logs | `/vercel:status` |
+| Deploy or manage deployments | `/vercel:deploy` |
+| Environment variables | `/vercel:env-vars` |
+| CI/CD pipeline / GitHub integration | `/vercel:deployments-cicd` |
+| Serverless / Edge functions | `/vercel:vercel-functions` |
+| CLI commands and flags | `/vercel:vercel-cli` |
+| Storage (KV, Postgres, Blob) | `/vercel:vercel-storage` |
+| Caching strategy | `/vercel:runtime-cache` |
+| Next.js App Router | `/vercel:nextjs` |
+
+**Rule:** If you're about to open the Vercel dashboard or guess at a `vercel` CLI command, invoke the relevant skill first.
