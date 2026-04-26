@@ -1,10 +1,3 @@
-<!-- SCAFFOLD:START - Do not edit between markers -->
-# smart-invoice-workflow
-
-Hosted SaaS that automates invoice follow-up for small businesses.
-
-<!-- SCAFFOLD:END - Custom content below is preserved -->
-
 ## What This Is
 
 **"Stop chasing invoices. We do it for you."**
