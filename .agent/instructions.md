@@ -69,7 +69,6 @@ This section defines the AI agents used in the Smart Invoice Workflow.  Each age
 
 - NEVER hard-code API keys, secrets, or credentials in script files. Use `.env` and `os.getenv()`.
 - NEVER use absolute paths (e.g., machine-specific paths). ALWAYS use relative paths or `PROJECT_ROOT` env var.
-- ALWAYS run validation before considering work complete: `python "./scripts/validate_project.py" [project-name]`
 - {constraint_1}
 - {constraint_2}
 
