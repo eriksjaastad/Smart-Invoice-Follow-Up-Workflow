@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.services.system_state import get_system_paused
 from app.services.daily_processing import process_user_invoices
+from app.services.alerts import report_exception, send_discord_alert
 
 router = APIRouter(prefix="/api/cron", tags=["cron"])
 logger = logging.getLogger(__name__)
@@ -37,50 +38,79 @@ async def trigger_daily_processing(
     Processes each user's invoices directly via Google APIs.
     Protected by DIGEST_CRON_SECRET via x-cron-secret header.
     """
-    _require_cron_secret(x_cron_secret)
+    try:
+        _require_cron_secret(x_cron_secret)
 
-    paused = await get_system_paused(db)
-    if paused:
-        return {"success": True, "message": "System is paused", "users_total": 0, "processed": 0}
+        paused = await get_system_paused(db)
+        if paused:
+            return {"success": True, "message": "System is paused", "users_total": 0, "processed": 0}
 
-    # Get active users with a sheet and valid Google connection
-    result = await db.execute(select(User).where(User.active == True))
-    all_users = result.scalars().all()
-    eligible_users = [
-        u for u in all_users
-        if u.sheet_id
-        and u.google_refresh_token_encrypted
-        and not u.google_token_revoked
-    ]
+        # Get active users with a sheet and valid Google connection
+        result = await db.execute(select(User).where(User.active))
+        all_users = result.scalars().all()
+        eligible_users = [
+            u for u in all_users
+            if u.sheet_id
+            and u.google_refresh_token_encrypted
+            and not u.google_token_revoked
+        ]
 
-    processed = 0
-    failed = 0
-    total_drafts = 0
-    total_invoices = 0
-    errors: list[str] = []
+        processed = 0
+        failed = 0
+        total_drafts = 0
+        total_invoices = 0
+        errors: list[str] = []
 
-    for user in eligible_users:
-        try:
-            proc_result = await process_user_invoices(user, db)
-            total_drafts += proc_result.drafts_created
-            total_invoices += proc_result.invoices_checked
-            if proc_result.errors:
+        for user in eligible_users:
+            try:
+                proc_result = await process_user_invoices(user, db)
+                total_drafts += proc_result.drafts_created
+                total_invoices += proc_result.invoices_checked
+                if proc_result.errors:
+                    failed += 1
+                    errors.append(f"{user.id}: {proc_result.errors}")
+                    await send_discord_alert(
+                        "Daily cron user processing errors",
+                        "process_user_invoices returned errors",
+                        {
+                            "route": "/api/cron/trigger-daily",
+                            "user_id": str(user.id),
+                            "errors": [str(error) for error in proc_result.errors],
+                        },
+                    )
+                else:
+                    processed += 1
+            except Exception as e:
                 failed += 1
-                errors.append(f"{user.id}: {proc_result.errors}")
-            else:
-                processed += 1
-        except Exception as e:
-            failed += 1
-            errors.append(f"{user.id}: {e}")
+                errors.append(f"{user.id}: {e}")
+                logger.exception("Daily cron processing failed for user %s", user.id)
+                await report_exception(
+                    "Daily cron processing failed",
+                    e,
+                    {
+                        "route": "/api/cron/trigger-daily",
+                        "user_id": str(user.id),
+                    },
+                )
 
-    await db.commit()
+        await db.commit()
 
-    return {
-        "success": failed == 0,
-        "users_total": len(eligible_users),
-        "processed": processed,
-        "failed": failed,
-        "drafts_created": total_drafts,
-        "invoices_checked": total_invoices,
-        "errors": errors,
-    }
+        return {
+            "success": failed == 0,
+            "users_total": len(eligible_users),
+            "processed": processed,
+            "failed": failed,
+            "drafts_created": total_drafts,
+            "invoices_checked": total_invoices,
+            "errors": errors,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Daily cron handler failed")
+        await report_exception(
+            "Daily cron handler failed",
+            e,
+            {"route": "/api/cron/trigger-daily"},
+        )
+        raise
