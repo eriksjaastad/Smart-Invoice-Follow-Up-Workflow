@@ -12,14 +12,14 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from authlib.integrations.starlette_client import OAuth
-from typing import Optional
 import logging
 
 from app.core.config import settings
-from app.core.auth import get_current_user, require_auth
+from app.core.auth import require_auth
 from app.db.session import get_db
 from app.models import User
-from app.schemas.user import User as UserSchema, UserCreate
+from app.schemas.user import User as UserSchema
+from app.services.alerts import report_exception
 
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
@@ -146,10 +146,15 @@ async def callback(request: Request, db: AsyncSession = Depends(get_db)):
         return RedirectResponse(url="/dashboard.html")
         
     except Exception as e:
-        logger.error(f"Authentication failed: {str(e)}")
+        logger.exception("Authentication callback failed")
+        await report_exception(
+            "Auth callback failed",
+            e,
+            {"route": "/api/auth/callback"},
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Authentication failed: {str(e)}"
+            detail="Authentication failed"
         )
 
 
@@ -186,4 +191,3 @@ async def get_me(user: User = Depends(require_auth)):
     Requirement: 1.6
     """
     return user
-

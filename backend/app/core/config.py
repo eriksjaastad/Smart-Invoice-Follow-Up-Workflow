@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     backend_url: str = ""
     system_paused: bool = False  # Global kill switch (FR-21)
     debug_mock_auth: bool = False  # Set to True to bypass Auth0 login locally
+    log_level: str = "INFO"
+    sentry_dsn: str = ""
+    siw_alert_webhook_url: str = ""
     
     # Database
     database_url: str = ""

@@ -11,15 +11,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
 from typing import Optional
+import logging
 import stripe
 
 from app.core.config import settings
 from app.core.auth import require_auth
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import User as UserSchema
+from app.services.alerts import report_exception
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
+logger = logging.getLogger(__name__)
 
 # Initialize Stripe with API key
 stripe.api_key = settings.stripe_secret_key
@@ -221,18 +223,31 @@ async def stripe_webhook(
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
     
-    # Handle the event
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        await handle_checkout_completed(session, db)
-    
-    elif event["type"] == "customer.subscription.deleted":
-        subscription = event["data"]["object"]
-        await handle_subscription_deleted(subscription, db)
-    
-    elif event["type"] == "customer.subscription.updated":
-        subscription = event["data"]["object"]
-        await handle_subscription_updated(subscription, db)
+    try:
+        # Handle the event
+        if event["type"] == "checkout.session.completed":
+            session = event["data"]["object"]
+            await handle_checkout_completed(session, db)
+
+        elif event["type"] == "customer.subscription.deleted":
+            subscription = event["data"]["object"]
+            await handle_subscription_deleted(subscription, db)
+
+        elif event["type"] == "customer.subscription.updated":
+            subscription = event["data"]["object"]
+            await handle_subscription_updated(subscription, db)
+    except Exception as e:
+        logger.exception("Stripe webhook handler failed for event %s", event.get("id"))
+        await report_exception(
+            "Stripe webhook handler failed",
+            e,
+            {
+                "route": "/api/billing/webhook",
+                "stripe_event_id": event.get("id"),
+                "stripe_event_type": event.get("type"),
+            },
+        )
+        raise
     
     return {"status": "success"}
 
