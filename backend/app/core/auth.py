@@ -4,10 +4,14 @@ Auth0 authentication utilities.
 This module provides JWT validation and user authentication via Auth0.
 Auth0 is non-negotiable for security - do NOT replace with custom JWT or homebrew auth.
 """
+import time
 from typing import Optional
-from fastapi import Depends, HTTPException, Header, status, Request
+
+import httpx
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
+from jose.exceptions import ExpiredSignatureError, JWTClaimsError
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
@@ -20,6 +24,12 @@ from sqlalchemy import select
 # HTTP Bearer token security scheme - auto_error=False to allow session-based auth
 security = HTTPBearer(auto_error=False)
 
+JWKS_CACHE_TTL_SECONDS = 60 * 60
+_JWKS_CACHE: dict[str, object] = {
+    "expires_at": 0.0,
+    "keys_by_kid": {},
+}
+
 
 class AuthError(Exception):
     """Custom exception for authentication errors."""
@@ -28,9 +38,81 @@ class AuthError(Exception):
         self.status_code = status_code
 
 
-def verify_jwt(token: str) -> dict:
+def _auth0_domain() -> str:
+    return settings.auth0_domain.removeprefix("https://").removeprefix("http://").rstrip("/")
+
+
+def _auth0_issuer() -> str:
+    return f"https://{_auth0_domain()}/"
+
+
+def _jwks_url() -> str:
+    return f"https://{_auth0_domain()}/.well-known/jwks.json"
+
+
+def clear_jwks_cache() -> None:
+    """Clear cached Auth0 JWKS keys. Intended for tests and emergency refreshes."""
+    _JWKS_CACHE["expires_at"] = 0.0
+    _JWKS_CACHE["keys_by_kid"] = {}
+
+
+async def _fetch_jwks_keys() -> dict[str, dict]:
+    if not settings.auth0_domain:
+        raise AuthError("Auth0 domain is not configured", status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(_jwks_url())
+            response.raise_for_status()
+            jwks = response.json()
+    except Exception:
+        raise AuthError("Unable to fetch Auth0 signing keys", status.HTTP_401_UNAUTHORIZED)
+
+    keys_by_kid = {
+        key["kid"]: key
+        for key in jwks.get("keys", [])
+        if isinstance(key, dict) and key.get("kid")
+    }
+    if not keys_by_kid:
+        raise AuthError("Auth0 signing keys are unavailable", status.HTTP_401_UNAUTHORIZED)
+
+    _JWKS_CACHE["keys_by_kid"] = keys_by_kid
+    _JWKS_CACHE["expires_at"] = time.monotonic() + JWKS_CACHE_TTL_SECONDS
+    return keys_by_kid
+
+
+async def _get_jwks_keys(force_refresh: bool = False) -> dict[str, dict]:
+    cached_keys = _JWKS_CACHE.get("keys_by_kid", {})
+    expires_at = float(_JWKS_CACHE.get("expires_at", 0.0))
+
+    if (
+        not force_refresh
+        and isinstance(cached_keys, dict)
+        and cached_keys
+        and time.monotonic() < expires_at
+    ):
+        return cached_keys
+
+    return await _fetch_jwks_keys()
+
+
+async def _get_signing_key(kid: str) -> dict:
+    keys_by_kid = await _get_jwks_keys()
+    key = keys_by_kid.get(kid)
+    if key:
+        return key
+
+    # Auth0 may rotate keys while the local cache is still valid.
+    keys_by_kid = await _get_jwks_keys(force_refresh=True)
+    key = keys_by_kid.get(kid)
+    if not key:
+        raise AuthError("Token signing key is not recognized", status.HTTP_401_UNAUTHORIZED)
+    return key
+
+
+async def verify_jwt(token: str) -> dict:
     """
-    Verify and decode a JWT token from Auth0.
+    Verify and decode an Auth0 RS256 JWT using the tenant JWKS.
     
     Args:
         token: JWT token string
@@ -41,21 +123,32 @@ def verify_jwt(token: str) -> dict:
     Raises:
         AuthError: If token is invalid or expired
     """
+    if not settings.auth0_audience:
+        raise AuthError("Auth0 audience is not configured", status.HTTP_401_UNAUTHORIZED)
+
     try:
-        # Decode JWT token
-        # Note: In production, you should fetch and cache Auth0's public keys (JWKS)
-        # and use them to verify the signature. For now, we're using the shared secret.
+        header = jwt.get_unverified_header(token)
+        if header.get("alg") != "RS256":
+            raise AuthError("Invalid token signing algorithm", status.HTTP_401_UNAUTHORIZED)
+
+        kid = header.get("kid")
+        if not kid:
+            raise AuthError("Token is missing key id", status.HTTP_401_UNAUTHORIZED)
+
+        signing_key = await _get_signing_key(kid)
         payload = jwt.decode(
             token,
-            settings.jwt_secret,
-            algorithms=["HS256"],
+            signing_key,
+            algorithms=["RS256"],
             audience=settings.auth0_audience,
-            issuer=f"https://{settings.auth0_domain}/"
+            issuer=_auth0_issuer(),
         )
         return payload
-    except jwt.ExpiredSignatureError:
+    except AuthError:
+        raise
+    except ExpiredSignatureError:
         raise AuthError("Token has expired", status.HTTP_401_UNAUTHORIZED)
-    except jwt.JWTClaimsError:
+    except JWTClaimsError:
         raise AuthError("Invalid token claims", status.HTTP_401_UNAUTHORIZED)
     except JWTError:
         raise AuthError("Invalid token", status.HTTP_401_UNAUTHORIZED)
@@ -87,7 +180,7 @@ async def get_current_user(
     if credentials:
         try:
             # Verify JWT token
-            payload = verify_jwt(credentials.credentials)
+            payload = await verify_jwt(credentials.credentials)
             
             # Extract auth0_user_id from token
             auth0_user_id: str = payload.get("sub")
@@ -184,6 +277,4 @@ def require_auth(user: User = Depends(get_current_active_user)) -> User:
         Authenticated user object
     """
     return user
-
-
 

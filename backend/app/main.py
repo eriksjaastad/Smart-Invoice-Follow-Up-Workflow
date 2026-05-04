@@ -32,6 +32,14 @@ def _configure_logging() -> None:
     )
 
 
+def _validate_startup_configuration() -> None:
+    environment = settings.environment.strip().lower()
+    if environment in {"production", "prod"} and settings.debug_mock_auth:
+        message = "DEBUG_MOCK_AUTH must never be enabled in production"
+        logging.getLogger(__name__).critical(message)
+        raise ValueError(message)
+
+
 def _init_sentry() -> None:
     if not settings.sentry_dsn:
         logging.getLogger(__name__).info("Sentry disabled because SENTRY_DSN is unset")
@@ -53,6 +61,7 @@ def _init_sentry() -> None:
 
 
 _configure_logging()
+_validate_startup_configuration()
 _init_sentry()
 logger = logging.getLogger(__name__)
 
