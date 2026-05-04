@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.db.session import Base
 
 # Import all models here to ensure they're registered with Base
-from app.models import User, JobHistory, SystemState  # noqa: F401
+from app.models import JobHistory, StripeEvent, SystemState, User  # noqa: F401
 
 # this is the Alembic Config object
 config = context.config
