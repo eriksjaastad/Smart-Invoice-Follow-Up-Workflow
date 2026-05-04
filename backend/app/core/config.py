@@ -44,10 +44,9 @@ class Settings(BaseSettings):
     auth0_client_secret: str = ""
     auth0_audience: str = ""
     auth0_callback_url: str = ""
-    jwt_secret: str = ""
     secret_key: str = "your-secret-key-change-in-production"
 
-    @field_validator("jwt_secret", "secret_key", mode="before")
+    @field_validator("secret_key", mode="before")
     @classmethod
     def strip_secret_whitespace(cls, v: str) -> str:
         """Strip trailing literal \\n and whitespace from secrets."""
