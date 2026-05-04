@@ -1,4 +1,5 @@
 """FastAPI application entry point"""
+import logging
 import sys
 from pathlib import Path
 
@@ -7,22 +8,61 @@ _backend_dir = str(Path(__file__).resolve().parent.parent)
 if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 from app.core.config import settings
-from app.db.session import Base
+
+
+def _logging_level() -> int:
+    return getattr(logging, settings.log_level.upper(), logging.INFO)
+
+
+def _configure_logging() -> None:
+    level = _logging_level()
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        force=True,
+    )
+
+
+def _init_sentry() -> None:
+    if not settings.sentry_dsn:
+        logging.getLogger(__name__).info("Sentry disabled because SENTRY_DSN is unset")
+        return
+
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.environment,
+        integrations=[
+            LoggingIntegration(
+                sentry_logs_level=_logging_level(),
+                level=logging.INFO,
+                event_level=None,
+            ),
+        ],
+        enable_logs=True,
+    )
+    logging.getLogger(__name__).info("Sentry initialized")
+
+
+_configure_logging()
+_init_sentry()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
-    print(f"Starting Smart Invoice SaaS Backend... env={settings.environment}")
+    logger.info("Starting Smart Invoice SaaS Backend env=%s", settings.environment)
     yield
-    print("Shutting down Smart Invoice SaaS Backend...")
+    logger.info("Shutting down Smart Invoice SaaS Backend")
 
 
 # Create FastAPI application

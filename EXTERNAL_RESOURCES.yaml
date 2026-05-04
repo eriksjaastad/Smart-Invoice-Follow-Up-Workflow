@@ -1,0 +1,15 @@
+resources:
+  - name: Sentry
+    type: error_tracking
+    purpose: Backend exception tracking for the FastAPI application.
+    required_env:
+      - SENTRY_DSN
+    optional: true
+    notes: Disabled when SENTRY_DSN is unset.
+  - name: Discord operational alert webhook
+    type: alerting
+    purpose: Posts production failure alerts for cron, Stripe webhook, and Auth0 callback failures.
+    required_env:
+      - SIW_ALERT_WEBHOOK_URL
+    optional: true
+    notes: Disabled when SIW_ALERT_WEBHOOK_URL is unset.
