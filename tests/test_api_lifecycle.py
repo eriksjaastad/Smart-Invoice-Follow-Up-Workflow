@@ -7,6 +7,7 @@ Make.com / Stripe external calls are mocked — no real API credits consumed.
 Run with:
     uv run pytest tests/test_api_lifecycle.py -v
 """
+import logging
 import json
 import pytest
 from unittest.mock import patch, AsyncMock
@@ -14,6 +15,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.models.stripe_event import StripeEvent
 from app.models.user import User
 
 
@@ -205,6 +207,153 @@ async def test_stripe_webhook_reports_handler_exception(test_client: AsyncClient
             )
 
     report_exception.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_stripe_webhook_deduplicates_event_replay(test_client: AsyncClient):
+    """Duplicate Stripe event ids return 200 without running the handler twice."""
+    handler = AsyncMock(return_value=None)
+    event = {
+        "id": "evt_duplicate",
+        "type": "checkout.session.completed",
+        "data": {"object": {"metadata": {"user_id": "user-123"}}},
+    }
+
+    with (
+        patch("app.api.billing.stripe.Webhook.construct_event", return_value=event),
+        patch("app.api.billing.handle_checkout_completed", handler),
+    ):
+        first_response = await test_client.post(
+            "/api/billing/webhook",
+            content=json.dumps({"type": "checkout.session.completed"}),
+            headers={"stripe-signature": "valid-signature"},
+        )
+        second_response = await test_client.post(
+            "/api/billing/webhook",
+            content=json.dumps({"type": "checkout.session.completed"}),
+            headers={"stripe-signature": "valid-signature"},
+        )
+
+    assert first_response.status_code == 200
+    assert first_response.json() == {"status": "success"}
+    assert second_response.status_code == 200
+    assert second_response.json() == {"status": "duplicate"}
+    handler.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_stripe_webhook_alerts_on_missing_checkout_metadata(
+    test_client: AsyncClient,
+    test_db: AsyncSession,
+    test_user: User,
+):
+    """checkout.session.completed without metadata.user_id sends an ops alert."""
+    send_discord_alert = AsyncMock(return_value=True)
+    event = {
+        "id": "evt_missing_metadata",
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "id": "cs_missing_metadata",
+                "customer": "cus_missing_metadata",
+                "subscription": "sub_missing_metadata",
+                "metadata": {},
+            }
+        },
+    }
+
+    with (
+        patch("app.api.billing.stripe.Webhook.construct_event", return_value=event),
+        patch("app.api.billing.send_discord_alert", send_discord_alert),
+    ):
+        response = await test_client.post(
+            "/api/billing/webhook",
+            content=json.dumps({"type": "checkout.session.completed"}),
+            headers={"stripe-signature": "valid-signature"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "success"}
+    await test_db.refresh(test_user)
+    assert test_user.plan == "free"
+    assert await test_db.get(StripeEvent, "evt_missing_metadata") is not None
+    send_discord_alert.assert_awaited_once()
+    assert send_discord_alert.await_args.args[0] == "Stripe checkout missing user metadata"
+
+
+@pytest.mark.asyncio
+async def test_stripe_webhook_alerts_on_subscription_user_not_found(
+    test_client: AsyncClient,
+    test_db: AsyncSession,
+):
+    """Subscription events that match no user send an ops alert instead of silently returning."""
+    send_discord_alert = AsyncMock(return_value=True)
+    event = {
+        "id": "evt_deleted_missing_user",
+        "type": "customer.subscription.deleted",
+        "data": {
+            "object": {
+                "id": "sub_missing_user",
+                "customer": "cus_missing_user",
+            }
+        },
+    }
+
+    with (
+        patch("app.api.billing.stripe.Webhook.construct_event", return_value=event),
+        patch("app.api.billing.send_discord_alert", send_discord_alert),
+    ):
+        response = await test_client.post(
+            "/api/billing/webhook",
+            content=json.dumps({"type": "customer.subscription.deleted"}),
+            headers={"stripe-signature": "valid-signature"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "success"}
+    assert await test_db.get(StripeEvent, "evt_deleted_missing_user") is not None
+    send_discord_alert.assert_awaited_once()
+    assert send_discord_alert.await_args.args[0] == "Stripe subscription deleted user not found"
+
+
+@pytest.mark.asyncio
+async def test_stripe_webhook_logs_checkout_plan_flip(
+    test_client: AsyncClient,
+    test_db: AsyncSession,
+    test_user: User,
+    caplog,
+):
+    """Successful checkout logs the paid-plan flip with Stripe event context."""
+    event = {
+        "id": "evt_plan_flip",
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "id": "cs_plan_flip",
+                "customer": "cus_plan_flip",
+                "subscription": "sub_plan_flip",
+                "metadata": {"user_id": str(test_user.id)},
+            }
+        },
+    }
+
+    caplog.set_level(logging.INFO, logger="app.api.billing")
+    with patch("app.api.billing.stripe.Webhook.construct_event", return_value=event):
+        response = await test_client.post(
+            "/api/billing/webhook",
+            content=json.dumps({"type": "checkout.session.completed"}),
+            headers={"stripe-signature": "valid-signature"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "success"}
+    await test_db.refresh(test_user)
+    assert test_user.plan == "paid"
+    assert test_user.stripe_customer_id == "cus_plan_flip"
+    assert test_user.stripe_subscription_id == "sub_plan_flip"
+    assert await test_db.get(StripeEvent, "evt_plan_flip") is not None
+    assert "Stripe checkout plan flip event=evt_plan_flip" in caplog.text
+    assert "old_plan=free new_plan=paid" in caplog.text
 
 
 @pytest.mark.asyncio

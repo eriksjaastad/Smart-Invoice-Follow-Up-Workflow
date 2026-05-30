@@ -9,16 +9,19 @@ Provides endpoints for:
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from pydantic import BaseModel, Field
 from typing import Optional
 import logging
+from uuid import UUID
 import stripe
 
 from app.core.config import settings
 from app.core.auth import require_auth
 from app.db.session import get_db
+from app.models.stripe_event import StripeEvent
 from app.models.user import User
-from app.services.alerts import report_exception
+from app.services.alerts import report_exception, send_discord_alert
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 logger = logging.getLogger(__name__)
@@ -222,29 +225,58 @@ async def stripe_webhook(
         raise HTTPException(status_code=400, detail="Invalid payload")
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
+
+    event_id = event.get("id")
+    event_type = event.get("type")
+    if not event_id or not event_type:
+        raise HTTPException(status_code=400, detail="Missing Stripe event id or type")
+
+    existing_event = await db.get(StripeEvent, event_id)
+    if existing_event:
+        logger.info(
+            "Ignoring duplicate Stripe webhook event %s (%s)",
+            event_id,
+            event_type,
+        )
+        return {"status": "duplicate"}
+
+    db.add(StripeEvent(event_id=event_id, event_type=event_type))
+    try:
+        await db.flush()
+    except IntegrityError:
+        await db.rollback()
+        logger.info(
+            "Ignoring duplicate Stripe webhook event %s (%s)",
+            event_id,
+            event_type,
+        )
+        return {"status": "duplicate"}
     
     try:
         # Handle the event
-        if event["type"] == "checkout.session.completed":
+        if event_type == "checkout.session.completed":
             session = event["data"]["object"]
-            await handle_checkout_completed(session, db)
+            await handle_checkout_completed(session, db, event_id)
 
-        elif event["type"] == "customer.subscription.deleted":
+        elif event_type == "customer.subscription.deleted":
             subscription = event["data"]["object"]
-            await handle_subscription_deleted(subscription, db)
+            await handle_subscription_deleted(subscription, db, event_id)
 
-        elif event["type"] == "customer.subscription.updated":
+        elif event_type == "customer.subscription.updated":
             subscription = event["data"]["object"]
-            await handle_subscription_updated(subscription, db)
+            await handle_subscription_updated(subscription, db, event_id)
+
+        await db.commit()
     except Exception as e:
-        logger.exception("Stripe webhook handler failed for event %s", event.get("id"))
+        await db.rollback()
+        logger.exception("Stripe webhook handler failed for event %s", event_id)
         await report_exception(
             "Stripe webhook handler failed",
             e,
             {
                 "route": "/api/billing/webhook",
-                "stripe_event_id": event.get("id"),
-                "stripe_event_type": event.get("type"),
+                "stripe_event_id": event_id,
+                "stripe_event_type": event_type,
             },
         )
         raise
@@ -252,7 +284,7 @@ async def stripe_webhook(
     return {"status": "success"}
 
 
-async def handle_checkout_completed(session: dict, db: AsyncSession):
+async def handle_checkout_completed(session: dict, db: AsyncSession, event_id: str):
     """
     Handle successful checkout - upgrade user to paid plan.
 
@@ -260,26 +292,67 @@ async def handle_checkout_completed(session: dict, db: AsyncSession):
         session: Stripe checkout session object
         db: Database session
     """
-    user_id = session["metadata"]["user_id"]
+    user_id = session.get("metadata", {}).get("user_id")
+    if not user_id:
+        logger.error("Stripe checkout completed event %s missing metadata.user_id", event_id)
+        await send_discord_alert(
+            "Stripe checkout missing user metadata",
+            "checkout.session.completed arrived without metadata.user_id",
+            {
+                "stripe_event_id": event_id,
+                "stripe_session_id": session.get("id"),
+                "stripe_customer_id": session.get("customer"),
+                "stripe_subscription_id": session.get("subscription"),
+            },
+        )
+        return
 
     # Fetch user
+    try:
+        user_uuid = UUID(user_id)
+    except (TypeError, ValueError):
+        user_uuid = None
+
     result = await db.execute(
-        select(User).where(User.id == user_id)
+        select(User).where(User.id == user_uuid)
     )
     user = result.scalar_one_or_none()
 
     if not user:
+        logger.error("Stripe checkout completed event %s user not found: %s", event_id, user_id)
+        await send_discord_alert(
+            "Stripe checkout user not found",
+            "checkout.session.completed referenced a missing user",
+            {
+                "stripe_event_id": event_id,
+                "metadata_user_id": user_id,
+                "stripe_session_id": session.get("id"),
+                "stripe_customer_id": session.get("customer"),
+                "stripe_subscription_id": session.get("subscription"),
+            },
+        )
         return  # User not found, skip
 
     # Update user to paid plan
+    old_plan = user.plan
     user.plan = "paid"
     user.stripe_customer_id = session["customer"]
     user.stripe_subscription_id = session["subscription"]
 
-    await db.commit()
+    await db.flush()
+    logger.info(
+        "Stripe checkout plan flip event=%s user_id=%s email=%s old_plan=%s new_plan=%s customer=%s subscription=%s",
+        event_id,
+        user.id,
+        user.email,
+        old_plan,
+        user.plan,
+        user.stripe_customer_id,
+        user.stripe_subscription_id,
+    )
 
 
-async def handle_subscription_deleted(subscription: dict, db: AsyncSession):
+async def handle_subscription_deleted(subscription: dict, db: AsyncSession, event_id: str):
     """
     Handle subscription cancellation - downgrade user to free plan.
 
@@ -294,16 +367,41 @@ async def handle_subscription_deleted(subscription: dict, db: AsyncSession):
     user = result.scalar_one_or_none()
 
     if not user:
+        logger.error(
+            "Stripe subscription deleted event %s user not found for subscription %s",
+            event_id,
+            subscription.get("id"),
+        )
+        await send_discord_alert(
+            "Stripe subscription deleted user not found",
+            "customer.subscription.deleted referenced a missing user",
+            {
+                "stripe_event_id": event_id,
+                "stripe_subscription_id": subscription.get("id"),
+                "stripe_customer_id": subscription.get("customer"),
+            },
+        )
         return  # User not found, skip
 
     # Downgrade to free plan
+    old_plan = user.plan
+    old_subscription_id = user.stripe_subscription_id
     user.plan = "free"
     user.stripe_subscription_id = None
 
-    await db.commit()
+    await db.flush()
+    logger.info(
+        "Stripe subscription deleted plan flip event=%s user_id=%s email=%s old_plan=%s new_plan=%s old_subscription=%s",
+        event_id,
+        user.id,
+        user.email,
+        old_plan,
+        user.plan,
+        old_subscription_id,
+    )
 
 
-async def handle_subscription_updated(subscription: dict, db: AsyncSession):
+async def handle_subscription_updated(subscription: dict, db: AsyncSession, event_id: str):
     """
     Handle subscription update.
 
@@ -318,16 +416,42 @@ async def handle_subscription_updated(subscription: dict, db: AsyncSession):
     user = result.scalar_one_or_none()
 
     if not user:
+        logger.error(
+            "Stripe subscription updated event %s user not found for subscription %s",
+            event_id,
+            subscription.get("id"),
+        )
+        await send_discord_alert(
+            "Stripe subscription updated user not found",
+            "customer.subscription.updated referenced a missing user",
+            {
+                "stripe_event_id": event_id,
+                "stripe_subscription_id": subscription.get("id"),
+                "stripe_customer_id": subscription.get("customer"),
+                "stripe_status": subscription.get("status"),
+            },
+        )
         return  # User not found, skip
 
     # Update subscription status based on Stripe status
+    old_plan = user.plan
     if subscription["status"] == "active":
         user.plan = "paid"
     else:
         # Subscription is paused, cancelled, or past_due
         user.plan = "free"
 
-    await db.commit()
+    await db.flush()
+    logger.info(
+        "Stripe subscription updated plan flip event=%s user_id=%s email=%s old_plan=%s new_plan=%s subscription=%s status=%s",
+        event_id,
+        user.id,
+        user.email,
+        old_plan,
+        user.plan,
+        user.stripe_subscription_id,
+        subscription.get("status"),
+    )
 
 
 @router.get("/status", response_model=BillingStatusResponse)
