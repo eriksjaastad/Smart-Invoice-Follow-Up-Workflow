@@ -357,6 +357,24 @@ async def test_stripe_webhook_logs_checkout_plan_flip(
 
 
 @pytest.mark.asyncio
+async def test_auth_callback_redirects_new_signup_with_conversion_marker(test_client: AsyncClient):
+    """New Auth0 users redirect with a signup marker for client-side conversion tracking."""
+    token = {
+        "userinfo": {
+            "sub": "auth0|new-signup",
+            "email": "new-signup@example.com",
+            "name": "New Signup",
+        }
+    }
+
+    with patch("app.api.auth.oauth.auth0.authorize_access_token", AsyncMock(return_value=token)):
+        response = await test_client.get("/api/auth/callback", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"] == "/dashboard.html?auth=signup"
+
+
+@pytest.mark.asyncio
 async def test_auth_callback_reports_exception(test_client: AsyncClient):
     """Auth0 callback exceptions are reported before returning 500."""
     report_exception = AsyncMock(return_value=True)
