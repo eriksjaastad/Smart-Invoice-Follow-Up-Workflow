@@ -120,7 +120,8 @@ async def callback(request: Request, db: AsyncSession = Depends(get_db)):
         )
         user = result.scalar_one_or_none()
         
-        if not user:
+        is_new_user = user is None
+        if is_new_user:
             # Create new user (Requirement 1.3, 1.4, 1.5)
             user = User(
                 auth0_user_id=auth0_user_id,
@@ -142,8 +143,10 @@ async def callback(request: Request, db: AsyncSession = Depends(get_db)):
         # Store user_id in session
         request.session['user_id'] = str(user.id)
         
-        # Redirect to dashboard
-        return RedirectResponse(url="/dashboard.html")
+        # Redirect to dashboard. New users carry an auth=signup marker so
+        # Google Ads conversion fires only after Auth0 completed successfully.
+        redirect_url = "/dashboard.html?auth=signup" if is_new_user else "/dashboard.html"
+        return RedirectResponse(url=redirect_url)
         
     except Exception as e:
         logger.exception("Authentication callback failed")

@@ -123,6 +123,7 @@ from app.api.notifications import router as notifications_router
 from app.api.system import router as system_router
 from app.api.cron import router as cron_router
 from app.api.google_oauth import router as google_oauth_router
+from app.api.leads import router as leads_router
 
 app.include_router(auth_router)
 app.include_router(users_router)
@@ -134,6 +135,7 @@ app.include_router(notifications_router)
 app.include_router(system_router)
 app.include_router(cron_router)
 app.include_router(google_oauth_router)
+app.include_router(leads_router)
 
 # Mount static files (path relative to project root)
 static_dir = Path(__file__).parent.parent.parent / "static"
