@@ -192,6 +192,7 @@
                         const response = await fetch('/api/auth/me', { credentials: 'include' });
                         if (response.ok) {
                             this.user = await response.json();
+                            this.handleAuthReturn();
                             await this.handleCheckoutReturn();
                         } else {
                             window.location.href = '/login.html';
@@ -202,6 +203,23 @@
                     } finally {
                         this.loading = false;
                     }
+                },
+
+                handleAuthReturn() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('auth') !== 'signup') {
+                        return;
+                    }
+
+                    window.SmartInvoiceAds?.trackOnce(`signup-${this.user.id || this.user.email}`, () => {
+                        window.SmartInvoiceAds.trackConversion('lead', {
+                            source: 'auth0_callback'
+                        });
+                    });
+                    window.SmartInvoiceAds?.trackEvent('signup_complete', {
+                        source: 'auth0_callback'
+                    });
+                    window.history.replaceState({}, '', '/dashboard.html');
                 },
 
                 async handleCheckoutReturn() {

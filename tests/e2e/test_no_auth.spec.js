@@ -18,17 +18,17 @@ test.describe('Landing Page — Content', () => {
     await page.waitForLoadState('networkidle');
 
     // Hero headline
-    const headline = page.locator('text=Follow-up is the').first();
+    const headline = page.locator('text=Freelancers: turn your Google Sheet').first();
     await expect(headline).toBeVisible({ timeout: 10000 });
 
-    // "Standard." accent text
-    await expect(page.locator('text=Standard.').first()).toBeVisible();
+    // Pain-first accent text
+    await expect(page.locator('text=into invoice follow-up.').first()).toBeVisible();
 
     // Hero subtext
-    await expect(page.locator('text=42-day escalation').first()).toBeVisible();
+    await expect(page.locator('text=awkward reminder emails').first()).toBeVisible();
 
     // CTA button
-    const cta = page.locator('text=Deploy Protocol').first();
+    const cta = page.locator('text=Start for Free').first();
     await expect(cta).toBeVisible();
   });
 
@@ -102,24 +102,21 @@ test.describe('Landing Page — Content', () => {
 // ─────────────────────────────────────────────
 
 test.describe('Landing Page — Links', () => {
-  test('all CTA buttons point to /login.html', async ({ page }) => {
+  test('primary CTA buttons point to lead capture before Auth0', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Collect all links to login.html
-    const loginLinks = page.locator('a[href="/login.html"]');
-    const count = await loginLinks.count();
-    expect(count).toBeGreaterThanOrEqual(3); // navbar + hero + pricing Essential + pricing Performance
+    const captureLinks = page.locator('a[href="#start-free"]');
+    const count = await captureLinks.count();
+    expect(count).toBeGreaterThanOrEqual(3); // navbar + hero + pricing Essential
   });
 
-  test('Enterprise tier links to mailto for sales', async ({ page }) => {
+  test('Enterprise tier uses a lead capture form instead of mailto', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    const mailto = page.locator('a[href^="mailto:"]').first();
-    await expect(mailto).toBeVisible({ timeout: 10000 });
-    const href = await mailto.getAttribute('href');
-    expect(href).toContain('synthinsightlabs.com');
+    await expect(page.locator('form[aria-label="Contact enterprise sales"]').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('a[href^="mailto:"]').first()).toHaveCount(0);
   });
 
   test('navbar anchor links exist for Protocol, Philosophy, Pricing', async ({ page }) => {
@@ -127,7 +124,7 @@ test.describe('Landing Page — Links', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.locator('a[href="#protocol"]')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('a[href="#philosophy"]')).toBeVisible();
+    await expect(page.locator('a[href="#case-study"]')).toBeVisible();
     await expect(page.locator('a[href="#pricing"]')).toBeVisible();
   });
 
@@ -151,8 +148,8 @@ test.describe('Landing Page — Mobile Viewport', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('text=Follow-up is the').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=Deploy Protocol').first()).toBeVisible();
+    await expect(page.locator('text=Freelancers: turn your Google Sheet').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Start for Free').first()).toBeVisible();
 
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, 'mobile-01-hero.png'),
@@ -185,8 +182,8 @@ test.describe('Landing Page — Mobile Viewport', () => {
     const navProtocol = page.locator('nav >> a[href="#protocol"]');
     await expect(navProtocol).toBeHidden();
 
-    // But Start Free button should still be visible
-    const startFree = page.locator('nav >> a[href="/login.html"]');
+    // But Start for Free button should still be visible
+    const startFree = page.locator('nav >> a[href="#start-free"]');
     await expect(startFree).toBeVisible({ timeout: 10000 });
   });
 });
@@ -198,7 +195,7 @@ test.describe('Landing Page — Tablet Viewport', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('text=Follow-up is the').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Freelancers: turn your Google Sheet').first()).toBeVisible({ timeout: 10000 });
 
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, 'tablet-01-landing.png'),

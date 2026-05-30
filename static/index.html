@@ -130,19 +130,19 @@
                     
                     <div className="hidden md:flex items-center gap-8 font-heading text-sm font-medium tracking-tight">
                         <a href="#protocol" className="hover:text-accent transition-colors">Protocol</a>
-                        <a href="#philosophy" className="hover:text-accent transition-colors">Philosophy</a>
+                        <a href="#case-study" className="hover:text-accent transition-colors">Case Study</a>
                         <a href="#pricing" className="hover:text-accent transition-colors">Pricing</a>
                     </div>
 
                     <a
-                        href="/login.html"
+                        href="#start-free"
                         data-ads-event="landing_cta_click_nav"
                         className={`px-6 py-2 rounded-full font-heading text-sm font-bold btn-magnetic group relative ${
                         isScrolled ? 'bg-charcoal text-white' : 'bg-white text-charcoal'
                     }`}>
                         <span className="bg-accent"></span>
                         <div className="relative z-10 flex items-center gap-2">
-                            Start Free <Icon name="arrow-right" size={14} className="group-hover:translate-x-1 transition-transform" />
+                            Start for Free <Icon name="arrow-right" size={14} className="group-hover:translate-x-1 transition-transform" />
                         </div>
                     </a>
                 </nav>
@@ -188,23 +188,23 @@
                             </div>
                             
                             <h1 className="text-white">
-                                <span className="hero-stagger block font-heading font-extrabold text-5xl md:text-7xl lg:text-9xl tracking-tighter leading-none mb-2">
-                                    Follow-up is the
+                                <span className="hero-stagger block font-heading font-extrabold text-5xl md:text-7xl lg:text-8xl tracking-tighter leading-none mb-2">
+                                    Freelancers: turn your Google Sheet
                                 </span>
-                                <span className="hero-stagger block font-drama italic text-7xl md:text-9xl lg:text-[14rem] leading-[0.8] text-accent">
-                                    Standard.
+                                <span className="hero-stagger block font-drama italic text-6xl md:text-8xl lg:text-[10rem] leading-[0.8] text-accent">
+                                    into invoice follow-up.
                                 </span>
                             </h1>
                             
                             <p className="hero-stagger text-white/60 text-lg md:text-xl max-w-xl font-heading font-medium leading-relaxed mt-8">
-                                Smart Invoice automates your 42-day escalation workflow. Connect Google Sheets, pick your file, and let the system handle the rest.
+                                Stop losing nights to awkward reminder emails. Smart Invoice turns your existing Google Sheet into an automated 42-day follow-up machine.
                             </p>
                             
                             <div className="hero-stagger mt-10">
-                                <a href="/login.html" data-ads-event="landing_cta_click_hero" className="px-10 py-5 rounded-full bg-accent text-white font-heading font-extrabold text-lg btn-magnetic group inline-flex items-center gap-3">
+                                <a href="#start-free" data-ads-event="landing_cta_click_hero" className="px-10 py-5 rounded-full bg-accent text-white font-heading font-extrabold text-lg btn-magnetic group inline-flex items-center gap-3">
                                     <span className="bg-white/20"></span>
                                     <div className="relative z-10 flex items-center gap-3">
-                                        Deploy Protocol <Icon name="arrow-right" size={20} className="group-hover:translate-x-1 transition-transform" />
+                                        Start for Free <Icon name="arrow-right" size={20} className="group-hover:translate-x-1 transition-transform" />
                                     </div>
                                 </a>
                             </div>
@@ -343,6 +343,92 @@
                 </div>
             );
         };
+
+        const LeadCapture = ({ source = "landing_waitlist", title = "Start free without rebuilding your workflow.", intent = "sample-reminder" }) => {
+            const [email, setEmail] = useState("");
+            const [status, setStatus] = useState("idle");
+            const [message, setMessage] = useState("");
+
+            const submitLead = async (event) => {
+                event.preventDefault();
+                setStatus("loading");
+                setMessage("");
+
+                try {
+                    const response = await fetch("/api/leads", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email, source, intent }),
+                    });
+
+                    const body = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(body.detail || "Could not capture lead");
+                    }
+
+                    window.SmartInvoiceAds?.trackEvent("lead_capture_complete", { source });
+                    setStatus("success");
+                    setMessage(body.message || "You're on the list. We'll send the setup path shortly.");
+                    setEmail("");
+                } catch (error) {
+                    setStatus("error");
+                    setMessage("That didn't go through. Please try again or use the login path.");
+                }
+            };
+
+            return (
+                <div className="relative w-full max-w-2xl mx-auto">
+                    <form onSubmit={submitLead} className="flex flex-col sm:flex-row gap-3" aria-label={title}>
+                        <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                            placeholder="you@business.com"
+                            className="min-w-0 flex-1 rounded-full px-6 py-4 bg-white text-charcoal border border-charcoal/10 font-heading outline-none focus:ring-4 focus:ring-accent/20"
+                        />
+                        <button
+                            type="submit"
+                            disabled={status === "loading"}
+                            className="rounded-full px-8 py-4 bg-accent text-white font-heading font-extrabold disabled:opacity-60"
+                        >
+                            {status === "loading" ? "Saving..." : "Send Me the Free Setup"}
+                        </button>
+                    </form>
+                    {message && (
+                        <p className={`${status === "success" ? "text-green-300" : "text-red-300"}` + " mt-4 text-sm font-heading"} role="status">
+                            {message}
+                        </p>
+                    )}
+                </div>
+            );
+        };
+
+        const CaseStudy = () => (
+            <section id="case-study" className="py-20 px-8 bg-background">
+                <div className="max-w-6xl mx-auto rounded-4xl bg-white border border-charcoal/5 p-10 md:p-16 shadow-xl">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+                        <div>
+                            <span className="font-mono text-accent text-xs uppercase tracking-[0.2em]">Case Study</span>
+                            <h2 className="font-heading font-extrabold text-4xl md:text-6xl tracking-tighter mt-4">$47K recovered from invoices that were already sitting in a spreadsheet.</h2>
+                        </div>
+                        <p className="text-charcoal/60 text-lg font-heading max-w-md">The punchline is simple: consistent follow-up beats heroic chasing. Smart Invoice turns that discipline into a system.</p>
+                    </div>
+                </div>
+            </section>
+        );
+
+        const StartFree = () => (
+            <section id="start-free" className="py-24 px-8 bg-background">
+                <div className="max-w-4xl mx-auto text-center rounded-4xl bg-charcoal p-10 md:p-16 text-white">
+                    <span className="font-mono text-accent text-xs uppercase tracking-[0.2em]">No Auth0 wall</span>
+                    <h2 className="font-heading font-extrabold text-4xl md:text-6xl tracking-tighter mt-4 mb-6">Get the free setup path first.</h2>
+                    <p className="text-white/60 font-heading text-lg mb-10">Drop your email and we’ll send the sample reminder path before you connect Google or create an account.</p>
+                    <LeadCapture />
+                    <a href="/login.html" data-ads-event="landing_auth0_secondary" className="inline-block mt-10 text-white/60 hover:text-white font-heading text-sm underline underline-offset-4">Ready now? Continue to account setup.</a>
+                </div>
+            </section>
+        );
 
         const Features = () => (
             <section className="py-32 px-8 bg-background">
@@ -504,7 +590,7 @@
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> 3 Invoices / day</li>
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> 42-day cycle</li>
                             </ul>
-                            <a href="/login.html" data-ads-event="landing_cta_click_pricing_free" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Select</a>
+                            <a href="#start-free" data-ads-event="landing_cta_click_pricing_free" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Start for Free</a>
                         </div>
                         <div className="p-10 rounded-4xl bg-accent flex flex-col gap-8 transform md:scale-105 shadow-2xl">
                             <span className="font-mono text-white/60 uppercase text-xs tracking-widest">Performance</span>
@@ -522,7 +608,9 @@
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> Unlimited scale</li>
                                 <li className="flex items-center gap-2"><Icon name="check" size={16} className="text-accent" /> Dedicated instance</li>
                             </ul>
-                            <a href="mailto:erik@synthinsightlabs.com" className="mt-auto py-4 rounded-full border border-white/20 text-center font-bold hover:bg-white hover:text-charcoal">Contact</a>
+                            <div className="mt-auto">
+                                <LeadCapture source="enterprise_sales" title="Contact enterprise sales" intent="enterprise-demo" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -548,8 +636,8 @@
                             System Operational
                         </div>
                         <div className="flex gap-8 text-white/40 font-heading text-sm">
-                            <a href="#" className="hover:text-white">Terms</a>
-                            <a href="#" className="hover:text-white">Privacy</a>
+                            <a href="/terms.html" className="hover:text-white">Terms</a>
+                            <a href="/privacy.html" className="hover:text-white">Privacy</a>
                         </div>
                     </div>
                 </div>
@@ -560,6 +648,8 @@
             <main>
                 <Navbar />
                 <Hero />
+                <StartFree />
+                <CaseStudy />
                 <Features />
                 <Philosophy />
                 <div id="protocol" className="relative">
