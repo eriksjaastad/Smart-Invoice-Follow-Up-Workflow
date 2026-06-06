@@ -1,3 +1,5 @@
+> **Retirement notice (2026-06-06):** Erik confirmed Smart Invoice Workflow failed and no longer exists as an active product. This repository is historical failed-product context only; do not treat launch, ops, marketing, or development docs as active instructions.
+
 # SIW Launch Readiness Plan — V1
 
 ## Status: READY FOR RESEARCH
@@ -5,7 +7,7 @@
 The product is deployed and working. This plan defines what Auxesis needs to research and produce before we start distribution.
 
 ## What's Done
-- Product live at smartinvoiceworkflow.com
+- Historical note: product had been live at smartinvoiceworkflow.com, but Erik confirmed on 2026-06-06 that it failed and is no longer active
 - Auth0 login, Google OAuth, Stripe billing all working
 - Daily cron processing invoices, creating Gmail drafts
 - 6-stage escalation (7-42 days)

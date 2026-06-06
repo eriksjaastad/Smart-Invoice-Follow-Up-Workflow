@@ -1,3 +1,5 @@
+> **Retirement notice (2026-06-06):** Erik confirmed Smart Invoice Workflow failed and no longer exists as an active product. This repository is historical failed-product context only; do not treat launch, ops, marketing, or development docs as active instructions.
+
 <!-- SCAFFOLD:START - Do not edit between markers -->
 # smart-invoice-workflow
 
@@ -77,8 +79,8 @@ No Google tokens touch our servers. Make.com handles OAuth.
 
 ## Status
 
-**Phase:** Active development (backend built, frontend in progress)
-**Goal:** Ship MVP, get one paying customer, learn to sell.
+**Phase:** Failed/retired as of 2026-06-06
+**Goal:** Historical failed-product reference only. Do not resume build, launch, ops, or marketing work unless Erik explicitly reopens the project.
 
 ## CI / Automated Code Review
 
