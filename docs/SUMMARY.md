@@ -1,3 +1,5 @@
+> **Retirement notice (2026-06-06):** Erik confirmed Smart Invoice Workflow failed and no longer exists as an active product. This repository is historical failed-product context only; do not treat launch, ops, marketing, or development docs as active instructions.
+
 # E2E Testing Implementation Summary
 
 **Date:** 2026-03-11
@@ -80,7 +82,7 @@ Enable AI agents to test the full Smart Invoice Workflow pipeline:
 
 ### Task #4778 is DONE when:
 - [ ] All 16 Playwright tests pass against Preview
-- [ ] Full lifecycle verified: signup → onboarding → payment �- [ ] Full lifecycle verified: signup → onboarding → paymection security maintained (DEBUG_MOCK_AUTH=false)
+- [ ] Full lifecycle verified: signup → onboarding → payment �- [ ] Full lifecycle verified: signup → onboarding → paymection security maintained (DEBUG_MOCK_AUTH=false)
 - [ ] Agent can independently run tests
 
 ### Task #5103 is DONE when:

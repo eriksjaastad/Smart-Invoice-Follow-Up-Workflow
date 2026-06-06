@@ -1,3 +1,5 @@
+> **Retirement notice (2026-06-06):** Erik confirmed Smart Invoice Workflow failed and no longer exists as an active product. This repository is historical failed-product context only; do not treat launch, ops, marketing, or development docs as active instructions.
+
 # 🚀 Tomorrow Morning: E2E Testing Quick Start
 
 **Goal:** Get agent-driven E2E testing working in ~45 minutes

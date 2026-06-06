@@ -1,3 +1,5 @@
+> **Retirement notice (2026-06-06):** Erik confirmed Smart Invoice Workflow failed and no longer exists as an active product. This repository is historical failed-product context only; do not treat launch, ops, marketing, or development docs as active instructions.
+
 # OpenClaw Handoff — Smart Invoice Workflow
 
 **Date:** 2026-03-25
@@ -13,7 +15,7 @@ Automated invoice follow-up for freelancers and micro-agencies who track invoice
 
 User connects their Google account, points to their spreadsheet, and the system creates escalating Gmail draft reminders over 42 days (6 stages: friendly → firm → final notice). User reviews and sends the drafts manually — we never send on their behalf.
 
-**Live at:** https://smartinvoiceworkflow.com
+**Historical URL:** https://smartinvoiceworkflow.com — not an active product after 2026-06-06 failure/retirement confirmation.
 
 ---
 

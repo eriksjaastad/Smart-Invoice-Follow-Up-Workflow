@@ -1,3 +1,5 @@
+> **Retirement notice (2026-06-06):** Erik confirmed Smart Invoice Workflow failed and no longer exists as an active product. This repository is historical failed-product context only; do not treat launch, ops, marketing, or development docs as active instructions.
+
 # Task #5106: Verify All 16 E2E Tests Pass Against Preview
 
 ## Context
