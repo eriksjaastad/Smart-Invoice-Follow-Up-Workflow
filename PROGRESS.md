@@ -1,3 +1,5 @@
+> **Retirement notice (2026-06-06):** Erik confirmed Smart Invoice Workflow failed and no longer exists as an active product. This repository is historical failed-product context only; do not treat launch, ops, marketing, or development docs as active instructions.
+
 # Smart Invoice Workflow — Session Log
 
 **Updated:** 2026-04-12
@@ -22,7 +24,7 @@
 - **PR #15** — Added page view conversion event snippet to `index.html` for Google Ads optimization
 - Both merged to main and deployed to Vercel production
 
-### Current state
-- Google Ads campaign is live, $5/day budget
-- Conversion tracking installed and verified by Google
-- Waiting for first traffic data from ad campaign
+### Historical state at the time
+- Google Ads campaign was live at $5/day in April 2026
+- Conversion tracking was installed and verified by Google
+- Later correction: Erik confirmed on 2026-06-06 that Smart Invoice Workflow failed and is no longer active
